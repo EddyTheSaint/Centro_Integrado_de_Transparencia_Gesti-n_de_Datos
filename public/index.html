@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CIT - Carga de Datos</title>
+  <style>
+    :root{color-scheme:light;--ink:#17202a;--muted:#5d6875;--line:#d9dee6;--panel:#fff;--bg:#f3f5f8;--brand:#155e75;--ok:#15803d;--warn:#b45309;--bad:#b91c1c}
+    *{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);margin:0;color:var(--ink)}main{width:min(1160px,calc(100% - 32px));margin:28px auto 48px}h1{margin:0 0 4px;font-size:30px}h2{font-size:20px;margin:0 0 14px}h3{font-size:16px;margin:0 0 10px}.muted{color:var(--muted)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px;margin-top:18px}.grid{display:grid;gap:16px}.form-grid{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}label{display:block;font-weight:700;margin-bottom:7px}select,input,button{width:100%;min-height:44px;border-radius:7px;border:1px solid #b8c0cc;padding:10px 12px;font-size:15px;background:#fff}button{border:0;background:var(--brand);color:#fff;font-weight:800;cursor:pointer}.status{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.badge{display:inline-flex;align-items:center;min-height:30px;border-radius:999px;padding:5px 11px;font-weight:800;background:#e2e8f0}.badge.ok{background:#dcfce7;color:var(--ok)}.badge.warn{background:#ffedd5;color:var(--warn)}.badge.bad{background:#fee2e2;color:var(--bad)}.metrics{grid-template-columns:repeat(4,minmax(0,1fr))}.metric{border:1px solid var(--line);border-radius:8px;padding:16px;background:#fbfcfe}.metric strong{display:block;font-size:28px}.charts{grid-template-columns:repeat(2,minmax(0,1fr))}.bar-row{display:grid;grid-template-columns:minmax(130px,1.2fr) minmax(120px,2fr) 48px;gap:10px;align-items:center;margin:8px 0}.bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar-track{height:12px;background:#e7ebf0;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:#0891b2}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:10px;vertical-align:top}th{background:#eef2f6}tr:last-child td{border-bottom:0}.files{display:grid;gap:8px}.files a,.files span{display:block;color:#075985;word-break:break-all}pre{white-space:pre-wrap;background:#111827;color:#e5e7eb;padding:16px;border-radius:8px;overflow:auto;max-height:360px}@media(max-width:820px){.form-grid,.metrics,.charts{grid-template-columns:1fr}.bar-row{grid-template-columns:1fr}.bar-label{white-space:normal}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Centro Integrado de Transparencia</h1>
+    <div class="muted">Carga, validaci&oacute;n, normalizaci&oacute;n y tablero local v0.3.</div>
+  </header>
+
+  <section class="panel">
+    <form id="form" class="grid form-grid">
+      <div>
+        <label>Seleccionar proceso</label>
+        <select name="proceso" required>
+          <option value="">Seleccione...</option>
+          <option>PQRSD</option>
+          <option value="CONTRATACION">Contrataci&oacute;n</option>
+        </select>
+      </div>
+      <div>
+        <label>Seleccionar periodo</label>
+        <input name="periodo" type="month" required>
+      </div>
+      <div class="full">
+        <label>Seleccionar archivo</label>
+        <input name="archivo" type="file" accept=".xlsx,.xls" required>
+      </div>
+      <div class="full">
+        <button type="submit">Cargar y validar</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="status">
+      <h2 id="estado">Esperando carga</h2>
+      <span id="estadoBadge" class="badge">PENDIENTE</span>
+    </div>
+    <div id="resumen" class="grid metrics"></div>
+  </section>
+
+  <section id="reglasPanel" class="panel" hidden>
+    <h2>Reglas de normalizaci&oacute;n</h2>
+    <div id="reglas"></div>
+  </section>
+
+  <section id="dashboardPanel" class="panel" hidden>
+    <h2>Dashboard PQRSD</h2>
+    <div id="dashboard" class="grid charts"></div>
+  </section>
+
+  <section id="archivosPanel" class="panel" hidden>
+    <h2>Rutas y archivos generados</h2>
+    <div id="archivos" class="files"></div>
+  </section>
+
+  <section id="jsonPanel" class="panel" hidden>
+    <h2>Respuesta t&eacute;cnica</h2>
+    <pre id="salida"></pre>
+  </section>
+</main>
+
+<script>
+const form=document.getElementById("form");
+const estado=document.getElementById("estado");
+const badge=document.getElementById("estadoBadge");
+const resumen=document.getElementById("resumen");
+const reglasPanel=document.getElementById("reglasPanel");
+const dashboardPanel=document.getElementById("dashboardPanel");
+const archivosPanel=document.getElementById("archivosPanel");
+const jsonPanel=document.getElementById("jsonPanel");
+const salida=document.getElementById("salida");
+
+function limpiar(){
+  resumen.innerHTML="";
+  document.getElementById("reglas").innerHTML="";
+  document.getElementById("dashboard").innerHTML="";
+  document.getElementById("archivos").innerHTML="";
+  salida.textContent="";
+  reglasPanel.hidden=true;
+  dashboardPanel.hidden=true;
+  archivosPanel.hidden=true;
+  jsonPanel.hidden=true;
+}
+
+function metric(label,value,kind=""){
+  return `<div class="metric"><span class="muted">${label}</span><strong class="${kind}">${value}</strong></div>`;
+}
+
+function renderResumen(data){
+  const reporte=data.reporteValidacion||{};
+  resumen.innerHTML=[
+    metric("Total registros",reporte.total_registros ?? data.resumen?.totalFilas ?? 0),
+    metric("Errores",(reporte.errores||[]).length,"bad"),
+    metric("Advertencias",(reporte.advertencias||[]).length,"warn"),
+    metric("Reglas aplicadas",(reporte.reglas_aplicadas||[]).reduce((a,r)=>a+(r.cantidad_afectada||0),0))
+  ].join("");
+}
+
+function renderReglas(reglas){
+  reglasPanel.hidden=false;
+  const cont=document.getElementById("reglas");
+  if(!reglas.length){
+    cont.innerHTML='<p class="muted">No se aplicaron reglas configuradas.</p>';
+    return;
+  }
+  cont.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Valor original</th><th>Valor normalizado</th><th>Regla</th><th>Cantidad</th></tr></thead><tbody>${reglas.map(r=>`<tr><td>${r.campo}</td><td>${r.valor_original}</td><td>${r.valor_normalizado}</td><td>${r.regla}</td><td>${r.cantidad_afectada}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+function chart(title,items){
+  const max=Math.max(1,...items.map(i=>i.total));
+  const rows=items.slice(0,12).map(i=>{
+    const width=Math.max(3,Math.round((i.total/max)*100));
+    return `<div class="bar-row"><div class="bar-label" title="${i.categoria}">${i.categoria}</div><div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div><strong>${i.total}</strong></div>`;
+  }).join("");
+  return `<div><h3>${title}</h3>${rows || '<p class="muted">Sin datos.</p>'}</div>`;
+}
+
+function renderDashboard(dashboard){
+  if(!dashboard) return;
+  dashboardPanel.hidden=false;
+  document.getElementById("dashboard").innerHTML=[
+    chart("PQRSD por tipo de requerimiento",dashboard.porTipoRequerimiento||[]),
+    chart("PQRSD por medio de llegada",dashboard.porMedioLlegada||[]),
+    chart("PQRSD por comuna",dashboard.porComuna||[]),
+    chart("PQRSD por estado del tr&aacute;mite",dashboard.porEstadoTramite||[])
+  ].join("");
+}
+
+function urlArchivo(ruta){
+  if(!ruta) return "";
+  return "/" + ruta.replace(/^storage\/cargas\//,"archivos/");
+}
+
+function renderArchivos(rutas){
+  archivosPanel.hidden=false;
+  const cont=document.getElementById("archivos");
+  const items=[];
+  if(rutas.raw) items.push(["RAW",rutas.raw]);
+  if(rutas.normalizado) items.push(["Normalizado",rutas.normalizado]);
+  if(rutas.validacion?.json) items.push(["Validaci&oacute;n JSON",rutas.validacion.json]);
+  if(rutas.validacion?.excel) items.push(["Validaci&oacute;n Excel",rutas.validacion.excel]);
+  if(rutas.historico) items.push(["Hist&oacute;rico",rutas.historico]);
+  cont.innerHTML=items.map(([label,ruta])=>`<div><strong>${label}</strong><a href="${urlArchivo(ruta)}" target="_blank" rel="noreferrer">${ruta}</a></div>`).join("");
+}
+
+form.addEventListener("submit",async(ev)=>{
+  ev.preventDefault();
+  limpiar();
+  estado.textContent="Procesando...";
+  badge.textContent="PROCESANDO";
+  badge.className="badge";
+  try{
+    const response=await fetch("/api/cargas",{method:"POST",body:new FormData(form)});
+    const data=await response.json();
+    estado.innerHTML=`${data.estado||"ERROR"} - ${data.ok ? "Carga v&aacute;lida" : "Requiere revisi&oacute;n"}`;
+    badge.textContent=data.estado||"ERROR";
+    badge.className=`badge ${data.ok ? "ok" : response.status===422 ? "warn" : "bad"}`;
+    renderResumen(data);
+    renderReglas(data.normalizacion?.reglasAplicadas||[]);
+    renderDashboard(data.dashboard);
+    renderArchivos(data.rutas||{});
+    salida.textContent=JSON.stringify(data,null,2);
+    jsonPanel.hidden=false;
+  }catch(error){
+    estado.textContent="ERROR";
+    badge.textContent="ERROR";
+    badge.className="badge bad";
+    salida.textContent=error.message;
+    jsonPanel.hidden=false;
+  }
+});
+</script>
+</body>
+</html>

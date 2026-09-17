@@ -1,0 +1,7 @@
+node_modules/
+storage/cargas/*
+!storage/cargas/.gitkeep
+.env
+.env.*
+npm-debug.log*
+*.log

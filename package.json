@@ -1,0 +1,7 @@
+{
+  "name": "cit-cargador-mvp",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {"dev":"node --watch src/server.js","start":"node src/server.js"},
+  "dependencies": {"express":"^5.1.0","multer":"^2.0.2","xlsx":"^0.18.5"}
+}
