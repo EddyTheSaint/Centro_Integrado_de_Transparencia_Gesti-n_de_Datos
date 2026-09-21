@@ -140,6 +140,17 @@ function chartItemsAgrupados(items,separador){
   return (items||[]).map(d=>({categoria:`${d.categoria1} ${separador} ${d.categoria2}`,total:d.total}));
 }
 
+function totalCategoria(items,nombres){
+  const buscados=(Array.isArray(nombres)?nombres:[nombres]).map(v=>String(v).toUpperCase());
+  return (items||[]).reduce((total,item)=>{
+    return buscados.includes(String(item.categoria).toUpperCase()) ? total + (item.total||0) : total;
+  },0);
+}
+
+function porcentaje(valor,total){
+  return total ? Number(((valor/total)*100).toFixed(1)) : 0;
+}
+
 function renderAdvertencias(advertencias){
   if(!advertencias || !advertencias.length) return "";
   return `<div style="margin:16px 0;padding:12px;background:#fef3c7;border-left:4px solid #f59e0b;border-radius:4px;">
@@ -197,16 +208,23 @@ function renderDashboard(dashboard,proceso){
   }else if(proceso==="ENCUENTROS_DE_CIUDAD" || dashboard.proceso==="ENCUENTROS_DE_CIUDAD"){
     const inst=dashboard.dashboardInstitucional||{};
     const normalizado=dashboard.dashboardNormalizado||{};
-    const kpis=inst.kpis||normalizado.kpis||{};
+    const kpis=normalizado.kpis||inst.kpis||{};
     const sexo=normalizado.kpis?.sexo||dashboard.sexo||{};
     const graficas=normalizado.graficas||{};
+    const serieSexo=graficas.asistentesPorSexo||dashboard.porSexo||[];
+    const femenino=sexo.femenino||totalCategoria(serieSexo,"Femenino");
+    const masculino=sexo.masculino||totalCategoria(serieSexo,"Masculino");
+    const sexoNoInformado=sexo.noInformado||totalCategoria(serieSexo,["No informa","NO_INFORMADO"]);
+    const totalSexoInformado=sexo.totalSexoInformado||femenino+masculino;
+    const porcentajeMujeres=sexo.porcentajeMujeresSobreSexoInformado||porcentaje(femenino,totalSexoInformado);
+    const porcentajeHombres=sexo.porcentajeHombresSobreSexoInformado||porcentaje(masculino,totalSexoInformado);
     title.textContent="Dashboard Encuentros de Ciudad";
     kpisDiv.hidden=false;
     kpisDiv.innerHTML=[
       metric("Total Asistentes",(kpis.totalAsistentes||dashboard.totalRegistros||0).toLocaleString('es-ES')),
-      metric("% Mujeres",`${kpis.porcentajeMujeres||sexo.porcentajeMujeresSobreSexoInformado||0}%`),
-      metric("% Hombres",`${kpis.porcentajeHombres||sexo.porcentajeHombresSobreSexoInformado||0}%`),
-      metric("Sexo no informado",(kpis.totalSexoNoInformado||sexo.totalSexoNoInformado||0).toLocaleString('es-ES'))
+      metric("% Mujeres",`${porcentajeMujeres}%`),
+      metric("% Hombres",`${porcentajeHombres}%`),
+      metric("Sexo no informado",sexoNoInformado.toLocaleString('es-ES'))
     ].join("");
     chartsDiv.innerHTML=[
       `<div class="full"><p class="muted">${dashboard.notaDefinicionEvento||""}</p></div>`,
