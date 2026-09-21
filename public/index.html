@@ -134,6 +134,10 @@ function chart(title,items){
   return `<div><h3>${title}</h3>${rows || '<p class="muted">Sin datos.</p>'}</div>`;
 }
 
+function chartItemsAgrupados(items,separador){
+  return (items||[]).map(d=>({categoria:`${d.categoria1} ${separador} ${d.categoria2}`,total:d.total}));
+}
+
 function renderAdvertencias(advertencias){
   if(!advertencias || !advertencias.length) return "";
   return `<div style="margin:16px 0;padding:12px;background:#fef3c7;border-left:4px solid #f59e0b;border-radius:4px;">
@@ -153,21 +157,24 @@ function renderDashboard(dashboard,proceso){
     title.textContent="Dashboard Contratación";
     kpisDiv.hidden=true;
     chartsDiv.innerHTML=`<div class="full"><p class="muted" style="padding:20px;text-align:center;"><strong>${dashboard.mensaje}</strong></p></div>`;
-  }else if(dashboard.kpis?.totalPersonasAtendidas !== undefined){
+  }else if(proceso==="HABITANTES_CALLE" || dashboard.dashboardNormalizado?.kpis?.totalPersonasAtendidas !== undefined){
+    const dashboardHC=dashboard.dashboardNormalizado||dashboard;
+    const kpis=dashboardHC.kpis||{};
+    const graficas=dashboardHC.graficas||{};
     title.textContent="Dashboard Habitantes de Calle";
     kpisDiv.hidden=false;
     kpisDiv.innerHTML=[
-      metric("Total Personas Atendidas",dashboard.kpis.totalPersonasAtendidas.toLocaleString('es-ES')),
-      metric("Presupuesto Total",dashboard.kpis.presupuestoTotal.toLocaleString('es-ES',{style:'currency',currency:'COP',minimumFractionDigits:0})),
-      metric("Total Registros",dashboard.kpis.totalRegistrosEnFuente.toLocaleString('es-ES')),
+      metric("Total Personas Atendidas",(kpis.totalPersonasAtendidas||0).toLocaleString('es-ES')),
+      metric("Presupuesto Total",(kpis.presupuestoTotal||0).toLocaleString('es-ES',{style:'currency',currency:'COP',minimumFractionDigits:0})),
+      metric("Total Registros",(kpis.totalRegistrosEnFuente||0).toLocaleString('es-ES')),
       metric("Advertencias",(dashboard.advertencias||[]).length,"warn")
     ].join("");
     let chartsHtml=renderAdvertencias(dashboard.advertencias);
     chartsHtml+=[
-      chart("Presupuesto por A&ntilde;o",dashboard.graficas?.presupuestoPorAño||[]),
-      chart("Presupuesto por Proyecto (Top 20)",dashboard.graficas?.presupuestoPorProyecto||[]),
-      chart("Personas por Componente y Sede (Top 30)",dashboard.graficas?.personasPorComponenteYSede?.slice(0,12).map(d=>`${d.categoria1} - ${d.categoria2}`) || []),
-      chart("Personas por Rango de Edades y Sexo",dashboard.graficas?.personasPorEdadYSexo?.slice(0,12).map(d=>`${d.categoria1} / ${d.categoria2}`) || [])
+      chart("Presupuesto por A&ntilde;o",graficas["presupuestoPorAño"]||[]),
+      chart("Presupuesto por Proyecto (Top 20)",graficas.presupuestoPorProyecto||[]),
+      chart("Personas por Componente y Sede (Top 30)",chartItemsAgrupados(graficas.personasPorComponenteYSede,"-")),
+      chart("Personas por Rango de Edades y Sexo",chartItemsAgrupados(graficas.personasPorEdadYSexo,"/"))
     ].join("");
     chartsDiv.innerHTML=chartsHtml;
   }else if(dashboard.kpis?.numeroDeContratos !== undefined){
