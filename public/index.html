@@ -258,40 +258,54 @@ function renderDashboard(dashboard,proceso){
       chart("Personas atendidas por sexo",dashboard.graficas?.personasPorSexo||[])
     ].join("");
   }else if(proceso==="ENCUENTROS_DE_CIUDAD" || dashboard.proceso==="ENCUENTROS_DE_CIUDAD"){
-    const inst=dashboard.dashboardInstitucional||{};
-    const normalizado=dashboard.dashboardNormalizado||{};
-    const kpis=normalizado.kpis||inst.kpis||{};
-    const sexo=normalizado.kpis?.sexo||dashboard.sexo||{};
-    const graficas=normalizado.graficas||{};
-    const serieSexo=graficas.asistentesPorSexo||dashboard.porSexo||[];
+    const ec=dashboard;
+    const sexo=ec.sexo||{};
+    const asistentesPorAno=ec.asistentesPorAño||[];
+    const asistentesPorComuna=ec.porComunaNormalizada||[];
+    const asistentesPorSexo=ec.porSexo||[];
+    const asistentesPorEdad=ec.porRangoEdad||[];
+    const asistentesPorSatisfaccion=ec.asistentesPorSatisfaccionNormalizada||[];
+    const asistentesPorConoce=ec.asistentesPorConoceContraloria||[];
+    console.log("EC porComunaNormalizada", ec.porComunaNormalizada);
+    console.log("EC satisfacción", ec.asistentesPorSatisfaccionNormalizada);
+    console.log("EC conoce", ec.asistentesPorConoceContraloria);
+    [
+      ["Asistentes por año",asistentesPorAno],
+      ["Asistentes por comuna normalizada",asistentesPorComuna],
+      ["Asistentes por sexo",asistentesPorSexo],
+      ["Asistentes por rango de edad",asistentesPorEdad],
+      ["Asistentes por nivel de satisfacción",asistentesPorSatisfaccion],
+      ["Conocimiento de la Contraloría",asistentesPorConoce]
+    ].forEach(([nombre,items])=>console.log({nombre,esArray:Array.isArray(items),cantidad:items?.length,items}));
+    console.log("EC comuna checks",{
+      tiene8:asistentesPorComuna.some(x=>x.categoria==="8"),
+      tiene8Villahermosa:asistentesPorComuna.some(x=>x.categoria==="8 VILLAHERMOSA"),
+      top15:asistentesPorComuna.slice(0,15)
+    });
+    const serieSexo=asistentesPorSexo;
     const femenino=sexo.femenino||totalCategoria(serieSexo,"Femenino");
     const masculino=sexo.masculino||totalCategoria(serieSexo,"Masculino");
     const sexoNoInformado=sexo.noInformado||totalCategoria(serieSexo,["No informa","NO_INFORMADO"]);
     const totalSexoInformado=sexo.totalSexoInformado||femenino+masculino;
     const porcentajeMujeres=sexo.porcentajeMujeresSobreSexoInformado||porcentaje(femenino,totalSexoInformado);
     const porcentajeHombres=sexo.porcentajeHombresSobreSexoInformado||porcentaje(masculino,totalSexoInformado);
-    const asistentesPorAno=dashboard.asistentesPorAño||dashboard.asistentesPorAno||graficas.asistentesPorAño||graficas.asistentesPorAno||[];
-    const asistentesPorComuna=dashboard.porComunaNormalizada||[];
-    const asistentesPorSatisfaccion=dashboard.asistentesPorSatisfaccionNormalizada||graficas.asistentesPorSatisfaccionNormalizada||[];
-    const asistentesPorConoce=dashboard.asistentesPorConoceContraloria||graficas.asistentesPorConoceContraloria||[];
     title.textContent="Dashboard Encuentros de Ciudad";
     kpisDiv.hidden=false;
     kpisDiv.innerHTML=[
-      metric("Total Asistentes",(kpis.totalAsistentes||dashboard.totalRegistros||0).toLocaleString('es-ES')),
+      metric("Total Asistentes",(ec.totalRegistros||0).toLocaleString('es-ES')),
       metric("% Mujeres",`${porcentajeMujeres}%`),
       metric("% Hombres",`${porcentajeHombres}%`),
       metric("Sexo no informado",sexoNoInformado.toLocaleString('es-ES'))
     ].join("");
     chartsDiv.innerHTML=[
-      `<div class="full"><p class="muted">1 fila = 1 registro de asistencia/encuesta. No representa personas &uacute;nicas. ${dashboard.notaDefinicionEvento||""}</p></div>`,
+      `<div class="full"><p class="muted">1 fila = 1 registro de asistencia/encuesta. No representa personas &uacute;nicas. ${ec.notaDefinicionEvento||""}</p></div>`,
       chart("Asistentes por a&ntilde;o",asistentesPorAno),
       chart("Asistentes por comuna normalizada",asistentesPorComuna),
-      chart("Asistentes por sexo",graficas.asistentesPorSexo||dashboard.porSexo||[]),
-      chart("Asistentes por rango de edad",dashboard.porRangoEdad||[]),
+      chart("Asistentes por sexo",asistentesPorSexo),
+      chart("Asistentes por rango de edad",asistentesPorEdad),
       chart("Asistentes por nivel de satisfacci&oacute;n",asistentesPorSatisfaccion),
       chart("Conocimiento de la Contralor&iacute;a",asistentesPorConoce),
-      chart("Canal de atenci&oacute;n",graficas.canalAtencion||dashboard.porCanalAtencion||[]),
-      renderDiagnosticoEncuentros(dashboard)
+      renderDiagnosticoEncuentros(ec)
     ].join("");
   }else if(dashboard.kpis?.numeroDeContratos !== undefined){
     title.textContent="Dashboard Contratación";
