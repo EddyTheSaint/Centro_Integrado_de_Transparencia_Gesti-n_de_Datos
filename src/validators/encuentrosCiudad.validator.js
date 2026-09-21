@@ -174,9 +174,9 @@ export default {
     };
 
     let filasValidas = 0;
-    let filasconSexoVacio = 0;
-    let filasconEdadVacio = 0;
-    let filasconComunaVacio = 0;
+    let filasConSexoVacio = 0;
+    let filasConEdadVacio = 0;
+    let filasConComunaVacio = 0;
 
     filas.forEach((fila, i) => {
       // Contar registros válidos
@@ -191,7 +191,7 @@ export default {
         categoriasDetectadas.sexos.add(limpio);
         variantes.sexos.set(limpio, (variantes.sexos.get(limpio) || 0) + 1);
       } else {
-        filasconSexoVacio++;
+        filasConSexoVacio++;
       }
 
       // Detectar variantes de RANGO DE EDAD
@@ -201,7 +201,7 @@ export default {
         categoriasDetectadas.rangosEdad.add(limpio);
         variantes.rangosEdad.set(limpio, (variantes.rangosEdad.get(limpio) || 0) + 1);
       } else {
-        filasconEdadVacio++;
+        filasConEdadVacio++;
       }
 
       // Detectar variantes de COMUNA
@@ -211,7 +211,7 @@ export default {
         categoriasDetectadas.comunas.add(limpio);
         variantes.comunas.set(limpio, (variantes.comunas.get(limpio) || 0) + 1);
       } else {
-        filasconComunaVacio++;
+        filasConComunaVacio++;
       }
 
       // Detectar variantes de BARRIO
@@ -246,17 +246,17 @@ export default {
     });
 
     // Advertencias de datos faltantes altos
-    if (filasconEdadVacio > filas.length * 0.6) {
+    if (filasConEdadVacio > filas.length * 0.6) {
       advertencias.push({
         regla: "EC-EDAD-FALTANTE-ALTO",
-        mensaje: `${filasconEdadVacio} registros sin datos de rango de edad (${((filasconEdadVacio / filas.length) * 100).toFixed(1)}%).`
+        mensaje: `${filasConEdadVacio} registros sin datos de rango de edad (${((filasConEdadVacio / filas.length) * 100).toFixed(1)}%).`
       });
     }
 
-    if (filasconSexoVacio > filas.length * 0.1) {
+    if (filasConSexoVacio > filas.length * 0.1) {
       advertencias.push({
         regla: "EC-SEXO-FALTANTE",
-        mensaje: `${filasconSexoVacio} registros sin datos de sexo.`
+        mensaje: `${filasConSexoVacio} registros sin datos de sexo.`
       });
     }
 
