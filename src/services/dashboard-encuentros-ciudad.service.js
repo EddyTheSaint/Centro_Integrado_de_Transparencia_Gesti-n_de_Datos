@@ -264,6 +264,15 @@ function totalCategoria(items, categoria) {
   return items.find(item => item.categoria === categoria)?.total || 0;
 }
 
+function ordenarPorCatalogo(items, orden) {
+  const posicion = new Map(orden.map((categoria, index) => [categoria, index]));
+  return [...items].sort((a, b) => {
+    const pa = posicion.has(a.categoria) ? posicion.get(a.categoria) : Number.MAX_SAFE_INTEGER;
+    const pb = posicion.has(b.categoria) ? posicion.get(b.categoria) : Number.MAX_SAFE_INTEGER;
+    return pa - pb || b.total - a.total || a.categoria.localeCompare(b.categoria);
+  });
+}
+
 function construirVariantesComuna(filas) {
   const grupos = new Map();
   for (const fila of filas) {
@@ -303,12 +312,16 @@ export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
   const porComunaOriginal = contarPorCampo(filas, "_COMUNA_ORIGINAL");
   const porComuna = contarPorCampo(filas, "COMUNA_NORMALIZADA");
   const variantesComunaNormalizada = construirVariantesComuna(filas);
-  const porSatisfaccion = contarPorCampo(filas, "Nivel de Satisfacción Normalizado", {
-    excluir: ["N/A", "No Encuestado", "No informa"]
-  });
-  const porConoceContraloria = contarPorCampo(filas, "Conoce la Contraloría Normalizado", {
-    excluir: ["No informa"]
-  });
+  const asistentesPorSatisfaccionNormalizada = ordenarPorCatalogo(
+    contarPorCampo(filas, "SATISFACCION_NORMALIZADA"),
+    ["EXCELENTE", "BUENO", "ACEPTABLE", "REGULAR", "MALO", "NO_INFORMADO"]
+  );
+  const asistentesPorConoceContraloria = ordenarPorCatalogo(
+    contarPorCampo(filas, "CONOCE_CONTRALORIA_NORMALIZADO"),
+    ["SI", "NO", "NO_INFORMADO"]
+  );
+  const porSatisfaccion = asistentesPorSatisfaccionNormalizada;
+  const porConoceContraloria = asistentesPorConoceContraloria;
   const porCanalAtencion = contarPorCampo(filas, campos.canalAtencion);
 
   const totalEncuentros = eventos.definicion_fecha_lugar;
@@ -348,7 +361,10 @@ export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
       filtroAno: registrosPorAno.serie,
       filtroComuna: porComuna,
       asistentesPorComuna: porComuna,
-      asistentesPorAno: registrosPorAno.serie
+      asistentesPorAno: registrosPorAno.serie,
+      asistentesPorAño: registrosPorAno.serie,
+      asistentesPorSatisfaccionNormalizada,
+      asistentesPorConoceContraloria
     },
     visualesPbix: [
       { id: "827b37260a9e953de546", tipo: "cardVisual", medida: "Total Asistentes", valorLocal: totalRegistros },
@@ -356,8 +372,8 @@ export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
       { id: "a7cd624f6698b0fa0280", tipo: "cardVisual", medida: "% Hombres Asistentes", valorLocal: sexo.porcentajeHombresSobreSexoInformado },
       { id: "kp1EncTotalEnc0nt", tipo: "cardVisual", medida: "Total Encuentros", valorLocal: totalEncuentros },
       { id: "kp1EncPr0medi0As1", tipo: "cardVisual", medida: "Promedio Asistentes por Encuentro", valorLocal: promedioAsistentes },
-      { id: "chtEncSat1sfacc10n", tipo: "barChart", categoria: "Nivel de Satisfacción Normalizado", valor: "Total Asistentes" },
-      { id: "chtEncC0n0ceCtrl1a", tipo: "donutChart", categoria: "Conoce la Contraloría Normalizado", valor: "Total Asistentes" }
+      { id: "chtEncSat1sfacc10n", tipo: "barChart", categoria: "SATISFACCION_NORMALIZADA", valor: "Total Asistentes" },
+      { id: "chtEncC0n0ceCtrl1a", tipo: "donutChart", categoria: "CONOCE_CONTRALORIA_NORMALIZADO", valor: "Total Asistentes" }
     ]
   };
 
@@ -391,6 +407,10 @@ export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
     variantesComunaNormalizada,
     detalleComunasNormalizadas: variantesComunaNormalizada,
     porCanalAtencion,
+    asistentesPorAño: registrosPorAno.serie,
+    asistentesPorAno: registrosPorAno.serie,
+    asistentesPorSatisfaccionNormalizada,
+    asistentesPorConoceContraloria,
     registrosPorAño: registrosPorAno.conteo,
     registrosPorAno: registrosPorAno.conteo,
     totalConAño: registrosPorAno.totalConAno,
@@ -413,12 +433,15 @@ export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
       },
       graficas: {
         asistentesPorAno: registrosPorAno.serie,
+        asistentesPorAño: registrosPorAno.serie,
         asistentesPorComuna: porComuna,
         asistentesPorComunaOriginal: porComunaOriginal,
         variantesComunaNormalizada,
         asistentesPorSexo: porSexo,
-        satisfaccionEvento: porSatisfaccion,
-        conoceContraloria: porConoceContraloria,
+        satisfaccionEvento: asistentesPorSatisfaccionNormalizada,
+        asistentesPorSatisfaccionNormalizada,
+        conoceContraloria: asistentesPorConoceContraloria,
+        asistentesPorConoceContraloria,
         canalAtencion: porCanalAtencion
       }
     },

@@ -120,6 +120,7 @@ function renderResumen(data){
 function etiquetaCampoRegla(campo){
   const c=String(campo||"").toUpperCase();
   if(c.includes("COMUNA")) return "COMUNA";
+  if(c.includes("SATISFACCION")) return "SATISFACCIÓN";
   if(c.includes("SEXO")) return "SEXO";
   if(c.includes("EDAD")) return "RANGO DE EDAD";
   if(c.includes("ESCOLARIDAD")) return "ESCOLARIDAD";
@@ -269,6 +270,10 @@ function renderDashboard(dashboard,proceso){
     const totalSexoInformado=sexo.totalSexoInformado||femenino+masculino;
     const porcentajeMujeres=sexo.porcentajeMujeresSobreSexoInformado||porcentaje(femenino,totalSexoInformado);
     const porcentajeHombres=sexo.porcentajeHombresSobreSexoInformado||porcentaje(masculino,totalSexoInformado);
+    const asistentesPorAno=dashboard.asistentesPorAño||dashboard.asistentesPorAno||graficas.asistentesPorAño||graficas.asistentesPorAno||[];
+    const asistentesPorComuna=dashboard.porComunaNormalizada||[];
+    const asistentesPorSatisfaccion=dashboard.asistentesPorSatisfaccionNormalizada||graficas.asistentesPorSatisfaccionNormalizada||[];
+    const asistentesPorConoce=dashboard.asistentesPorConoceContraloria||graficas.asistentesPorConoceContraloria||[];
     title.textContent="Dashboard Encuentros de Ciudad";
     kpisDiv.hidden=false;
     kpisDiv.innerHTML=[
@@ -279,12 +284,12 @@ function renderDashboard(dashboard,proceso){
     ].join("");
     chartsDiv.innerHTML=[
       `<div class="full"><p class="muted">1 fila = 1 registro de asistencia/encuesta. No representa personas &uacute;nicas. ${dashboard.notaDefinicionEvento||""}</p></div>`,
-      chart("Asistentes por a&ntilde;o",graficas.asistentesPorAno||[]),
-      chart("Asistentes por comuna normalizada",graficas.asistentesPorComuna||dashboard.porComunaNormalizada||dashboard.porComuna||[]),
+      chart("Asistentes por a&ntilde;o",asistentesPorAno),
+      chart("Asistentes por comuna normalizada",asistentesPorComuna),
       chart("Asistentes por sexo",graficas.asistentesPorSexo||dashboard.porSexo||[]),
       chart("Asistentes por rango de edad",dashboard.porRangoEdad||[]),
-      chart("Satisfacci&oacute;n del evento",graficas.satisfaccionEvento||dashboard.satisfaccionEvento?.distribucion||[]),
-      chart("Conoce la Contralor&iacute;a",graficas.conoceContraloria||[]),
+      chart("Asistentes por nivel de satisfacci&oacute;n",asistentesPorSatisfaccion),
+      chart("Conocimiento de la Contralor&iacute;a",asistentesPorConoce),
       chart("Canal de atenci&oacute;n",graficas.canalAtencion||dashboard.porCanalAtencion||[]),
       renderDiagnosticoEncuentros(dashboard)
     ].join("");

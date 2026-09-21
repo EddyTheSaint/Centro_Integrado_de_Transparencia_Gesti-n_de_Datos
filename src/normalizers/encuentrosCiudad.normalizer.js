@@ -30,9 +30,9 @@ function normalizarEtiqueta(valor) {
 
 function normalizarSiNoPbix(valor) {
   const c = canon(valor);
-  if (c === "SI" || c === "S") return "Sí";
-  if (c === "NO") return "No";
-  return "No informa";
+  if (c === "SI" || c === "S") return "SI";
+  if (c === "NO") return "NO";
+  return "NO_INFORMADO";
 }
 
 function normalizarSexoPbix(valor) {
@@ -80,6 +80,16 @@ function normalizarComunaPbix(valor) {
   return limpio.toUpperCase();
 }
 
+function normalizarSatisfaccion(valor) {
+  const c = canon(valor);
+  if (["EXCELENTE", "EXE"].includes(c)) return "EXCELENTE";
+  if (["BUENO", "BUENA"].includes(c)) return "BUENO";
+  if (c === "ACEPTABLE") return "ACEPTABLE";
+  if (c === "REGULAR") return "REGULAR";
+  if (c === "MALO") return "MALO";
+  return "NO_INFORMADO";
+}
+
 export function normalizarEncuentrosCiudad({ filas, campos }) {
   const registros = new Map();
   const advertenciasDetectadas = [];
@@ -114,6 +124,12 @@ export function normalizarEncuentrosCiudad({ filas, campos }) {
     if (campos.canalAtencion) {
       normalizada['_CANAL_ORIGINAL'] = fila[campos.canalAtencion];
     }
+    if (campos.satisfaccionEvento) {
+      normalizada['_SATISFACCION_ORIGINAL'] = fila[campos.satisfaccionEvento];
+    }
+    if (campos.conoceContraloria) {
+      normalizada['_CONOCE_CONTRALORIA_ORIGINAL'] = fila[campos.conoceContraloria];
+    }
 
     if (campos.comuna) {
       const originalComuna = fila[campos.comuna];
@@ -130,9 +146,16 @@ export function normalizarEncuentrosCiudad({ filas, campos }) {
     }
     if (campos.conoceContraloria) {
       normalizada["Conoce la Contraloría Normalizado"] = normalizarSiNoPbix(fila[campos.conoceContraloria]);
+      normalizada["CONOCE_CONTRALORIA_NORMALIZADO"] = normalizada["Conoce la Contraloría Normalizado"];
     }
     if (campos.satisfaccionEvento) {
-      normalizada["Nivel de Satisfacción Normalizado"] = normalizarEtiqueta(fila[campos.satisfaccionEvento]);
+      const satisfaccionNormalizada = normalizarSatisfaccion(fila[campos.satisfaccionEvento]);
+      normalizada["Nivel de Satisfacción Normalizado"] = satisfaccionNormalizada;
+      normalizada["SATISFACCION_NORMALIZADA"] = satisfaccionNormalizada;
+      if (fila[campos.satisfaccionEvento] != null && String(fila[campos.satisfaccionEvento]).trim() !== "") {
+        const limpio = String(fila[campos.satisfaccionEvento]).trim();
+        registrarAplicacion(registros, "SATISFACCION", limpio, satisfaccionNormalizada, "EC-SATISFACCION-NORMALIZADA");
+      }
     }
 
     // Normalizar SEXO
