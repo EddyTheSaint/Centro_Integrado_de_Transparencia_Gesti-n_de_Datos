@@ -62,25 +62,35 @@ function fechaValida(ano, mes, dia) {
   return fecha.getUTCFullYear() === ano && fecha.getUTCMonth() === mes - 1 && fecha.getUTCDate() === dia;
 }
 
-function obtenerAnoDetallado(fecha) {
+export function parseFechaEvento(fecha) {
+  const base = {
+    valorOriginal: fecha ?? null,
+    tipo: fecha instanceof Date ? "Date" : typeof fecha,
+    resultadoParseo: null,
+    añoDetectado: null,
+    estado: "INVALIDO"
+  };
+
   if (fecha instanceof Date && !Number.isNaN(fecha.getTime())) {
-    return { ano: fecha.getFullYear(), interpretacion: "Date JS" };
+    return { ...base, resultadoParseo: "Date JS", añoDetectado: fecha.getFullYear(), estado: "PARSEADO" };
   }
 
   if (typeof fecha === "number" && fecha > 30000 && fecha < 60000) {
     const dt = new Date((fecha - 25569) * 86400000);
-    return { ano: dt.getUTCFullYear(), interpretacion: "serial Excel" };
+    return { ...base, resultadoParseo: "serial Excel", añoDetectado: dt.getUTCFullYear(), estado: "PARSEADO" };
   }
 
   const texto = String(fecha ?? "").trim();
-  if (!texto) return { ano: null, interpretacion: "vacio" };
+  if (!texto) return { ...base, resultadoParseo: "vacio", estado: "VACIO" };
 
   const ymd = texto.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:\s+.*)?$/);
   if (ymd) {
     const ano = Number(ymd[1]);
     const mes = Number(ymd[2]);
     const dia = Number(ymd[3]);
-    if (fechaValida(ano, mes, dia)) return { ano, interpretacion: "texto yyyy-MM-dd" };
+    if (fechaValida(ano, mes, dia)) {
+      return { ...base, resultadoParseo: "texto yyyy-MM-dd", añoDetectado: ano, estado: "PARSEADO" };
+    }
   }
 
   const dmyOmdy = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+.*)?$/);
@@ -91,53 +101,74 @@ function obtenerAnoDetallado(fecha) {
     const ddmmyyyy = fechaValida(ano, b, a);
     const mmddyyyy = fechaValida(ano, a, b);
 
-    if (ddmmyyyy && !mmddyyyy) return { ano, interpretacion: "texto dd/MM/yyyy inequivoco" };
-    if (mmddyyyy && !ddmmyyyy) return { ano, interpretacion: "texto MM/dd/yyyy inequivoco" };
+    if (ddmmyyyy && !mmddyyyy) {
+      return { ...base, resultadoParseo: "texto dd/MM/yyyy", añoDetectado: ano, estado: "PARSEADO" };
+    }
+    if (mmddyyyy && !ddmmyyyy) {
+      return { ...base, resultadoParseo: "texto MM/dd/yyyy", añoDetectado: ano, estado: "PARSEADO" };
+    }
     if (ddmmyyyy && mmddyyyy) {
-      return { ano, interpretacion: "año inequivoco con dia/mes ambiguo" };
+      return { ...base, resultadoParseo: "año inequivoco con dia/mes ambiguo", añoDetectado: ano, estado: "PARSEADO" };
     }
   }
 
   const parsed = new Date(texto);
   if (!Number.isNaN(parsed.getTime())) {
-    return { ano: parsed.getFullYear(), interpretacion: "Date.parse texto" };
+    return { ...base, resultadoParseo: "Date.parse texto", añoDetectado: parsed.getFullYear(), estado: "PARSEADO" };
   }
 
-  return { ano: null, interpretacion: "formato no reconocido" };
+  return { ...base, resultadoParseo: "formato no reconocido", estado: "INVALIDO" };
 }
 
 function contarPorAno(filas, campoFecha) {
   const conteo = { SIN_AÑO_RECONOCIDO: 0 };
   const noReconocidas = new Map();
+  const diagnosticoFechasEvento = new Map();
 
   filas.forEach((fila, index) => {
     const valor = fila[campoFecha];
-    const resultado = obtenerAnoDetallado(valor);
+    const resultado = parseFechaEvento(valor);
+    const valorOriginal = String(valor ?? "").trim();
+    const keyDiag = `${valorOriginal}||${resultado.tipo}||${resultado.resultadoParseo}||${resultado.estado}`;
+    const diag = diagnosticoFechasEvento.get(keyDiag) || {
+      valorOriginal: valor ?? null,
+      cantidad: 0,
+      tipo: resultado.tipo,
+      resultadoParseo: resultado.resultadoParseo,
+      añoDetectado: resultado.añoDetectado,
+      estado: resultado.estado,
+      ejemploFilas: []
+    };
+    diag.cantidad++;
+    if (diag.ejemploFilas.length < 5) diag.ejemploFilas.push(index + 2);
+    diagnosticoFechasEvento.set(keyDiag, diag);
 
-    if (!resultado.ano) {
+    if (resultado.estado !== "PARSEADO" || !resultado.añoDetectado) {
       conteo.SIN_AÑO_RECONOCIDO++;
-      const key = `${String(valor ?? "").trim()}||${typeof valor}||${resultado.interpretacion}`;
+      const key = `${valorOriginal}||${resultado.tipo}||${resultado.resultadoParseo}`;
       const actual = noReconocidas.get(key) || {
         valorOriginal: valor ?? null,
         cantidad: 0,
-        typeof: typeof valor,
+        tipo: resultado.tipo,
+        typeof: resultado.tipo,
+        resultadoParseo: resultado.resultadoParseo,
+        añoDetectado: resultado.añoDetectado,
+        estado: resultado.estado,
         ejemploFilas: [],
-        interpretacionPosible: resultado.interpretacion
+        interpretacionPosible: resultado.resultadoParseo
       };
       actual.cantidad++;
       if (actual.ejemploFilas.length < 5) actual.ejemploFilas.push(index + 2);
       noReconocidas.set(key, actual);
     } else {
-      conteo[resultado.ano] = (conteo[resultado.ano] || 0) + 1;
+      conteo[resultado.añoDetectado] = (conteo[resultado.añoDetectado] || 0) + 1;
     }
   });
-
-  if (conteo.SIN_AÑO_RECONOCIDO === 0) delete conteo.SIN_AÑO_RECONOCIDO;
 
   return {
     conteo,
     serie: Object.entries(conteo)
-      .map(([categoria, total]) => ({ categoria, total }))
+      .map(([categoria, total]) => ({ categoria, anio: categoria, total }))
       .sort((a, b) => {
         if (a.categoria === "SIN_AÑO_RECONOCIDO") return 1;
         if (b.categoria === "SIN_AÑO_RECONOCIDO") return -1;
@@ -145,7 +176,8 @@ function contarPorAno(filas, campoFecha) {
       }),
     totalConAno: filas.length - (conteo.SIN_AÑO_RECONOCIDO || 0),
     totalSinAno: conteo.SIN_AÑO_RECONOCIDO || 0,
-    diagnosticoFechasNoReconocidas: Array.from(noReconocidas.values())
+    diagnosticoFechasNoReconocidas: Array.from(noReconocidas.values()),
+    diagnosticoFechasEvento: Array.from(diagnosticoFechasEvento.values())
   };
 }
 
@@ -232,6 +264,29 @@ function totalCategoria(items, categoria) {
   return items.find(item => item.categoria === categoria)?.total || 0;
 }
 
+function construirVariantesComuna(filas) {
+  const grupos = new Map();
+  for (const fila of filas) {
+    const normalizada = fila.COMUNA_NORMALIZADA || "NO_INFORMADO";
+    const original = fila._COMUNA_ORIGINAL == null || String(fila._COMUNA_ORIGINAL).trim() === ""
+      ? "(VACIO)"
+      : String(fila._COMUNA_ORIGINAL).trim();
+    const grupo = grupos.get(normalizada) || new Map();
+    grupo.set(original, (grupo.get(original) || 0) + 1);
+    grupos.set(normalizada, grupo);
+  }
+
+  return Array.from(grupos.entries())
+    .map(([categoria, variantes]) => ({
+      categoria,
+      totalFinal: Array.from(variantes.values()).reduce((sum, total) => sum + total, 0),
+      variantesOrigen: Array.from(variantes.entries())
+        .map(([valorOriginal, total]) => ({ valorOriginal, total }))
+        .sort((a, b) => b.total - a.total || a.valorOriginal.localeCompare(b.valorOriginal))
+    }))
+    .sort((a, b) => b.totalFinal - a.totalFinal || a.categoria.localeCompare(b.categoria));
+}
+
 export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
   const totalRegistros = filas.length;
   const eventos = calcularEventos(filas, campos);
@@ -247,6 +302,7 @@ export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
   const porRangoEdad = contarPorCampo(filas, campos.rangoEdad);
   const porComunaOriginal = contarPorCampo(filas, "_COMUNA_ORIGINAL");
   const porComuna = contarPorCampo(filas, "COMUNA_NORMALIZADA");
+  const variantesComunaNormalizada = construirVariantesComuna(filas);
   const porSatisfaccion = contarPorCampo(filas, "Nivel de Satisfacción Normalizado", {
     excluir: ["N/A", "No Encuestado", "No informa"]
   });
@@ -332,12 +388,15 @@ export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
     porComunaOriginal,
     porComuna,
     porComunaNormalizada: porComuna,
+    variantesComunaNormalizada,
+    detalleComunasNormalizadas: variantesComunaNormalizada,
     porCanalAtencion,
     registrosPorAño: registrosPorAno.conteo,
     registrosPorAno: registrosPorAno.conteo,
     totalConAño: registrosPorAno.totalConAno,
     totalSinAño: registrosPorAno.totalSinAno,
     diagnosticoFechasNoReconocidas: registrosPorAno.diagnosticoFechasNoReconocidas,
+    diagnosticoFechasEvento: registrosPorAno.diagnosticoFechasEvento,
 
     dashboardInstitucional,
     dashboardNormalizado: {
@@ -356,6 +415,7 @@ export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
         asistentesPorAno: registrosPorAno.serie,
         asistentesPorComuna: porComuna,
         asistentesPorComunaOriginal: porComunaOriginal,
+        variantesComunaNormalizada,
         asistentesPorSexo: porSexo,
         satisfaccionEvento: porSatisfaccion,
         conoceContraloria: porConoceContraloria,
@@ -378,6 +438,7 @@ export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
       filasSinAño: registrosPorAno.totalSinAno,
       registrosPorAno,
       diagnosticoFechasNoReconocidas: registrosPorAno.diagnosticoFechasNoReconocidas,
+      diagnosticoFechasEvento: registrosPorAno.diagnosticoFechasEvento,
       categoriasDetectadas: validacion?.categoriasDetectadas || {}
     }
   };

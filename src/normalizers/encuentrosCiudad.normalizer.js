@@ -58,9 +58,9 @@ const CATALOGO_TERRITORIAL = {
   "13": "13 SAN JAVIER",
   "14": "14 EL POBLADO",
   "15": "15 GUAYABAL",
-  "16": "16 BELEN",
-  "50": "50 SAN SEBASTIAN DE PALMITAS",
-  "60": "60 SAN CRISTOBAL",
+  "16": "16 BELÉN",
+  "50": "50 SAN SEBASTIÁN DE PALMITAS",
+  "60": "60 SAN CRISTÓBAL",
   "70": "70 ALTAVISTA",
   "80": "80 SAN ANTONIO DE PRADO",
   "90": "90 SANTA ELENA"
@@ -116,8 +116,14 @@ export function normalizarEncuentrosCiudad({ filas, campos }) {
     }
 
     if (campos.comuna) {
-      normalizada["Comuna Normalizada"] = normalizarComunaPbix(fila[campos.comuna]);
+      const originalComuna = fila[campos.comuna];
+      const comunaNormalizada = normalizarComunaPbix(originalComuna);
+      normalizada["Comuna Normalizada"] = comunaNormalizada;
       normalizada["COMUNA_NORMALIZADA"] = normalizada["Comuna Normalizada"];
+      if (originalComuna != null && String(originalComuna).trim() !== "") {
+        const limpio = String(originalComuna).trim();
+        registrarAplicacion(registros, "COMUNA", limpio, comunaNormalizada, "EC-COMUNA-CODIGO-TERRITORIAL");
+      }
     }
     if (campos.sexo) {
       normalizada["Sexo Normalizado"] = normalizarSexoPbix(fila[campos.sexo]);

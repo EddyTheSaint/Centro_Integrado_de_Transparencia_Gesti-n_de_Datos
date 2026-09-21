@@ -117,11 +117,50 @@ function renderResumen(data){
   ].join("");
 }
 
-function renderReglas(reglas){
+function etiquetaCampoRegla(campo){
+  const c=String(campo||"").toUpperCase();
+  if(c.includes("COMUNA")) return "COMUNA";
+  if(c.includes("SEXO")) return "SEXO";
+  if(c.includes("EDAD")) return "RANGO DE EDAD";
+  if(c.includes("ESCOLARIDAD")) return "ESCOLARIDAD";
+  if(c.includes("CELULAR") || c.includes("CORREO") || c.includes("CONTRALOR") || c.includes("INTERES")) return "SI/NO";
+  return campo||"OTRO";
+}
+
+function renderReglasCompactas(reglas){
+  const grupos=new Map();
+  for(const regla of reglas){
+    const campo=etiquetaCampoRegla(regla.campo);
+    const actual=grupos.get(campo)||{campo,reglas:[],total:0};
+    actual.reglas.push(regla);
+    actual.total+=regla.cantidad_afectada||0;
+    grupos.set(campo,actual);
+  }
+  const gruposOrdenados=[...grupos.values()].sort((a,b)=>a.campo.localeCompare(b.campo));
+  const totalReglas=reglas.length;
+  return `
+    <div class="metric" style="margin-bottom:12px;max-width:360px;"><span class="muted">Normalizaciones aplicadas</span><strong>${totalReglas} reglas · ${gruposOrdenados.length} campos</strong></div>
+    ${gruposOrdenados.map(g=>`
+      <details style="border:1px solid var(--line);border-radius:8px;background:#fbfcfe;margin:8px 0;">
+        <summary style="cursor:pointer;padding:12px 14px;font-weight:800;">${g.campo}<span class="muted" style="font-weight:600;"> · ${g.reglas.length} reglas · ${g.total.toLocaleString('es-ES')} registros</span></summary>
+        <div class="table-wrap" style="border:0;border-top:1px solid var(--line);border-radius:0;">
+          <table><thead><tr><th>Valor original</th><th>Valor normalizado</th><th>Regla</th><th>Cantidad</th></tr></thead><tbody>
+            ${g.reglas.map(r=>`<tr><td>${r.valor_original}</td><td>${r.valor_normalizado}</td><td>${r.regla}</td><td>${r.cantidad_afectada}</td></tr>`).join("")}
+          </tbody></table>
+        </div>
+      </details>`).join("")}
+  `;
+}
+
+function renderReglas(reglas,proceso){
   reglasPanel.hidden=false;
   const cont=document.getElementById("reglas");
   if(!reglas.length){
     cont.innerHTML='<p class="muted">No se aplicaron reglas configuradas.</p>';
+    return;
+  }
+  if(proceso==="ENCUENTROS_DE_CIUDAD"){
+    cont.innerHTML=renderReglasCompactas(reglas);
     return;
   }
   cont.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Valor original</th><th>Valor normalizado</th><th>Regla</th><th>Cantidad</th></tr></thead><tbody>${reglas.map(r=>`<tr><td>${r.campo}</td><td>${r.valor_original}</td><td>${r.valor_normalizado}</td><td>${r.regla}</td><td>${r.cantidad_afectada}</td></tr>`).join("")}</tbody></table></div>`;
@@ -129,7 +168,7 @@ function renderReglas(reglas){
 
 function chart(title,items){
   const max=Math.max(1,...items.map(i=>i.total));
-  const rows=items.slice(0,12).map(i=>{
+  const rows=items.slice(0,15).map(i=>{
     const width=Math.max(3,Math.round((i.total/max)*100));
     return `<div class="bar-row"><div class="bar-label" title="${i.categoria}">${i.categoria}</div><div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div><strong>${i.total}</strong></div>`;
   }).join("");
@@ -149,6 +188,18 @@ function totalCategoria(items,nombres){
 
 function porcentaje(valor,total){
   return total ? Number(((valor/total)*100).toFixed(1)) : 0;
+}
+
+function renderDiagnosticoEncuentros(dashboard){
+  const variantes=(dashboard.detalleComunasNormalizadas||[]).slice(0,15);
+  const fechas=dashboard.diagnosticoFechasEvento||[];
+  return `<details class="full" style="border:1px solid var(--line);border-radius:8px;padding:12px;background:#fbfcfe;">
+    <summary style="cursor:pointer;font-weight:800;">Diagn&oacute;stico t&eacute;cnico</summary>
+    <h3 style="margin-top:14px;">Variantes por comuna normalizada</h3>
+    ${variantes.map(g=>`<div style="margin:8px 0;"><strong>${g.categoria}</strong> <span class="muted">(${g.totalFinal})</span><br><span class="muted">${g.variantesOrigen.map(v=>`${v.valorOriginal}: ${v.total}`).join(" · ")}</span></div>`).join("")}
+    <h3 style="margin-top:14px;">Fechas</h3>
+    ${fechas.map(f=>`<div style="margin:6px 0;"><strong>${f.valorOriginal}</strong> <span class="muted">${f.cantidad} · ${f.estado} · ${f.resultadoParseo} · ${f.añoDetectado||"SIN_AÑO"}</span></div>`).join("") || '<p class="muted">Sin diagn&oacute;sticos adicionales.</p>'}
+  </details>`;
 }
 
 function renderAdvertencias(advertencias){
@@ -227,13 +278,15 @@ function renderDashboard(dashboard,proceso){
       metric("Sexo no informado",sexoNoInformado.toLocaleString('es-ES'))
     ].join("");
     chartsDiv.innerHTML=[
-      `<div class="full"><p class="muted">${dashboard.notaDefinicionEvento||""}</p></div>`,
+      `<div class="full"><p class="muted">1 fila = 1 registro de asistencia/encuesta. No representa personas &uacute;nicas. ${dashboard.notaDefinicionEvento||""}</p></div>`,
       chart("Asistentes por a&ntilde;o",graficas.asistentesPorAno||[]),
       chart("Asistentes por comuna normalizada",graficas.asistentesPorComuna||dashboard.porComunaNormalizada||dashboard.porComuna||[]),
       chart("Asistentes por sexo",graficas.asistentesPorSexo||dashboard.porSexo||[]),
+      chart("Asistentes por rango de edad",dashboard.porRangoEdad||[]),
       chart("Satisfacci&oacute;n del evento",graficas.satisfaccionEvento||dashboard.satisfaccionEvento?.distribucion||[]),
       chart("Conoce la Contralor&iacute;a",graficas.conoceContraloria||[]),
-      chart("Canal de atenci&oacute;n",graficas.canalAtencion||dashboard.porCanalAtencion||[])
+      chart("Canal de atenci&oacute;n",graficas.canalAtencion||dashboard.porCanalAtencion||[]),
+      renderDiagnosticoEncuentros(dashboard)
     ].join("");
   }else if(dashboard.kpis?.numeroDeContratos !== undefined){
     title.textContent="Dashboard Contratación";
@@ -333,11 +386,11 @@ form.addEventListener("submit",async(ev)=>{
 
     renderResumen(data);
     if(data.hojas) renderHojas(data.hojas);
-    renderReglas(data.normalizacion?.reglasAplicadas||[]);
+    renderReglas(data.normalizacion?.reglasAplicadas||[],data.proceso);
     renderDashboard(data.dashboard,data.proceso);
     renderArchivos(data.rutas||{});
     salida.textContent=JSON.stringify(data,null,2);
-    jsonPanel.hidden=false;
+    jsonPanel.hidden=data.proceso==="ENCUENTROS_DE_CIUDAD";
   }catch(error){
     estado.textContent="ERROR";
     badge.textContent="ERROR";
