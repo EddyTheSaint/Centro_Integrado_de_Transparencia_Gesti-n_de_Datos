@@ -26,6 +26,8 @@
           <option value="BUEN_COMIENZO">Buen Comienzo</option>
           <option value="CONTRATACION">Contrataci&oacute;n</option>
           <option value="HABITANTES_CALLE">Habitantes de Calle</option>
+          <option value="ENVEJECIMIENTO_Y_VEJEZ">Envejecimiento y Vejez</option>
+          <option value="ENCUENTROS_DE_CIUDAD">Encuentros de Ciudad</option>
         </select>
       </div>
       <div>
@@ -177,6 +179,21 @@ function renderDashboard(dashboard,proceso){
       chart("Personas por Rango de Edades y Sexo",chartItemsAgrupados(graficas.personasPorEdadYSexo,"/"))
     ].join("");
     chartsDiv.innerHTML=chartsHtml;
+  }else if(proceso==="ENVEJECIMIENTO_Y_VEJEZ"){
+    title.textContent="Dashboard Envejecimiento y Vejez";
+    kpisDiv.hidden=false;
+    kpisDiv.innerHTML=[
+      metric("Personas Atendidas",(dashboard.kpis?.totalPersonasAtendidas||0).toLocaleString('es-ES')),
+      metric("Presupuesto Total",(dashboard.kpis?.presupuestoTotal||0).toLocaleString('es-ES',{style:'currency',currency:'COP',minimumFractionDigits:0})),
+      metric("Total Registros",(dashboard.kpis?.totalRegistrosEnFuente||0).toLocaleString('es-ES')),
+      metric("Visuales",4)
+    ].join("");
+    chartsDiv.innerHTML=[
+      chart("Presupuesto por A&ntilde;o",dashboard.graficas?.presupuestoPorAno||[]),
+      chart("Personas atendidas por comuna",dashboard.graficas?.personasPorComuna||[]),
+      chart("Personas por rango de edades y sexo",chartItemsAgrupados(dashboard.graficas?.personasPorRangoEdadSexo,"/")),
+      chart("Personas atendidas por sexo",dashboard.graficas?.personasPorSexo||[])
+    ].join("");
   }else if(dashboard.kpis?.numeroDeContratos !== undefined){
     title.textContent="Dashboard Contratación";
     kpisDiv.hidden=false;

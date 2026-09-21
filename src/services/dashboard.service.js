@@ -1,6 +1,8 @@
 import { crearDashboardBuenComienzo } from "./dashboard-buen-comienzo.service.js";
 import { crearDashboardContratacion } from "./dashboard-contratacion.service.js";
 import { crearDashboardHabitantesCalle } from "./dashboard-habitantes-calle.service.js";
+import { crearDashboardEnvejecimientoVejez } from "./dashboard-envejecimiento-vejez.service.js";
+import { crearDashboardEncuentrosCiudad } from "./dashboard-encuentros-ciudad.service.js";
 
 function contarPorCampo(filas,campo){
   if(!campo) return [];
@@ -31,5 +33,7 @@ export function crearDashboard({proceso,filas,campos,validacion}){
   if(procesoNormalizado==="BUEN_COMIENZO") return crearDashboardBuenComienzo({filas,campos});
   if(procesoNormalizado==="CONTRATACION") return crearDashboardContratacion({filas,campos});
   if(procesoNormalizado==="HABITANTES_CALLE") return crearDashboardHabitantesCalle({filas,campos,validacion});
+  if(procesoNormalizado==="ENVEJECIMIENTO_Y_VEJEZ") return crearDashboardEnvejecimientoVejez({filas,campos,validacion});
+  if(procesoNormalizado==="ENCUENTROS_DE_CIUDAD") return crearDashboardEncuentrosCiudad({filas,campos,validacion});
   return {totalRegistros:filas.length};
 }
