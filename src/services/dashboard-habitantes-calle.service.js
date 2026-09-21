@@ -1,6 +1,11 @@
 // Dashboard de Habitantes de Calle basado en RAW real
 // BD_HABITANTE_CALLE_MAYO.xlsx
 
+const TOTAL_RAW_CONTROL = 240960;
+const TOTAL_TABLERO_INSTITUCIONAL = 242986;
+const RAW_NO_SE_SABE = 11891;
+const TABLERO_NO_SE_SABE = 13917;
+
 function sumarPorCampo(filas, campo) {
   if (!campo) return 0;
   let suma = 0;
@@ -14,14 +19,13 @@ function sumarPorCampo(filas, campo) {
   return suma;
 }
 
-// Agrupa por una o dos categorías y suma valores
-function sumarPorCategoria(filas, campoCategoría, campoValor, limite = 999) {
-  if (!campoCategoría || !campoValor) return [];
+function sumarPorCategoria(filas, campoCategoria, campoValor, limite = 999) {
+  if (!campoCategoria || !campoValor) return [];
 
   const conteo = new Map();
   for (const fila of filas) {
-    const categoria = fila[campoCategoría];
-    const etiqueta = categoria == null || String(categoria).trim() === "" ? "(VACÍO)" : String(categoria).trim();
+    const categoria = fila[campoCategoria];
+    const etiqueta = categoria == null || String(categoria).trim() === "" ? "(VACIO)" : String(categoria).trim();
     const valor = Number(fila[campoValor]) || 0;
     conteo.set(etiqueta, (conteo.get(etiqueta) || 0) + valor);
   }
@@ -32,14 +36,13 @@ function sumarPorCategoria(filas, campoCategoría, campoValor, limite = 999) {
     .slice(0, limite);
 }
 
-// Agrupa por dos categorías y suma cantidades
 function agruparPorDosCategoriasYSumar(filas, campo1, campo2, campoValor) {
   if (!campo1 || !campo2 || !campoValor) return [];
 
   const datos = new Map();
   for (const fila of filas) {
-    const cat1 = fila[campo1] == null ? "(VACÍO)" : String(fila[campo1]).trim();
-    const cat2 = fila[campo2] == null ? "(VACÍO)" : String(fila[campo2]).trim();
+    const cat1 = fila[campo1] == null ? "(VACIO)" : String(fila[campo1]).trim();
+    const cat2 = fila[campo2] == null ? "(VACIO)" : String(fila[campo2]).trim();
     const clave = `${cat1}|||${cat2}`;
     const valor = Number(fila[campoValor]) || 0;
     datos.set(clave, (datos.get(clave) || 0) + valor);
@@ -82,18 +85,29 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
           personasPorEdadYSexo: []
         }
       },
-      advertencias: []
+      advertencias: [],
+      validacionIntegridadRaw: {
+        actual: 0,
+        esperado: TOTAL_RAW_CONTROL,
+        estado: "PENDIENTE"
+      },
+      comparacionInstitucional: {
+        actual: 0,
+        referencia: TOTAL_TABLERO_INSTITUCIONAL,
+        diferencia: -TOTAL_TABLERO_INSTITUCIONAL,
+        noSeSabe: {
+          raw: 0,
+          tablero: TABLERO_NO_SE_SABE,
+          diferencia: -TABLERO_NO_SE_SABE
+        }
+      }
     };
   }
 
-  // KPIs
   const totalPersonasAtendidas = sumarPorCampo(filas, campos.cantidad);
   const presupuestoTotal = sumarPorCampo(filas, campos.presupuesto);
-
-  // Validación contra valores de control
   const advertencias = [];
 
-  // ASSERT: Verificar totales por rango de edad
   const rangosTotales = {
     "18 A 28 AÑOS": 0,
     "29 A 59 AÑOS": 0,
@@ -113,16 +127,14 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
     }
   }
 
-  // Valores esperados (para verificar integridad de datos)
   const valoresEsperadosPorRango = {
     "18 A 28 AÑOS": 41925,
     "29 A 59 AÑOS": 150668,
     "60 AÑOS O MAS": 20362,
     "EDAD DESCONOCIDA": 16114,
-    "NO SE SABE": 11891
+    "NO SE SABE": RAW_NO_SE_SABE
   };
 
-  // Verificar que sumen exactamente 240960
   let sumaRangos = 0;
   let discrepanciasRangos = [];
   for (const [rango, esperado] of Object.entries(valoresEsperadosPorRango)) {
@@ -138,33 +150,51 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
     }
   }
 
-  // Diferencia total contra tablero institucional
-  const cantidadEsperada = 240960;
-  const diferencia = totalPersonasAtendidas - cantidadEsperada;
+  const validacionIntegridadRaw = {
+    actual: totalPersonasAtendidas,
+    esperado: TOTAL_RAW_CONTROL,
+    estado: totalPersonasAtendidas === TOTAL_RAW_CONTROL ? "COINCIDE" : "NO_COINCIDE",
+    diferencia: totalPersonasAtendidas - TOTAL_RAW_CONTROL
+  };
 
-  if (Math.abs(diferencia) > 0) {
+  const comparacionInstitucional = {
+    actual: totalPersonasAtendidas,
+    referencia: TOTAL_TABLERO_INSTITUCIONAL,
+    diferencia: totalPersonasAtendidas - TOTAL_TABLERO_INSTITUCIONAL,
+    noSeSabe: {
+      raw: RAW_NO_SE_SABE,
+      tablero: TABLERO_NO_SE_SABE,
+      diferencia: RAW_NO_SE_SABE - TABLERO_NO_SE_SABE
+    }
+  };
+
+  if (validacionIntegridadRaw.estado !== "COINCIDE") {
     advertencias.push({
-      regla: "HC-DIFERENCIA-TABLERO",
-      tipo: "información",
-      mensaje: `Diferencia contra tablero institucional: ${Math.abs(diferencia)} registros concentrada en categoría NO SE SABE. Esperado: ${cantidadEsperada.toLocaleString('es-ES')}, Obtenido: ${totalPersonasAtendidas.toLocaleString('es-ES')}.`
+      regla: "HC-INTEGRIDAD-RAW",
+      tipo: "error",
+      mensaje: `Integridad del archivo RAW no coincide: esperado ${TOTAL_RAW_CONTROL.toLocaleString("es-ES")}, obtenido ${totalPersonasAtendidas.toLocaleString("es-ES")}.`
     });
   }
 
-  // Reportar discrepancias en rangos si las hay
+  if (comparacionInstitucional.diferencia !== 0) {
+    advertencias.push({
+      regla: "HC-COMPARACION-INSTITUCIONAL",
+      tipo: "informacion",
+      mensaje: `Comparacion institucional: referencia ${TOTAL_TABLERO_INSTITUCIONAL.toLocaleString("es-ES")}, RAW actual ${totalPersonasAtendidas.toLocaleString("es-ES")}, diferencia ${comparacionInstitucional.diferencia.toLocaleString("es-ES")}.`
+    });
+  }
+
   if (discrepanciasRangos.length > 0) {
     for (const disc of discrepanciasRangos) {
       advertencias.push({
         regla: "HC-RANGO-DISCREPANCIA",
         tipo: "error",
-        mensaje: `Rango "${disc.rango}": esperado ${disc.esperado}, obtenido ${disc.actual} (diferencia: ${disc.diferencia > 0 ? '+' : ''}${disc.diferencia})`
+        mensaje: `Rango "${disc.rango}": esperado ${disc.esperado}, obtenido ${disc.actual} (diferencia: ${disc.diferencia > 0 ? "+" : ""}${disc.diferencia})`
       });
     }
   }
 
-  // Presupuesto por año
   const presupuestoPorAño = sumarPorCategoria(filas, campos.año, campos.presupuesto);
-
-  // Presupuesto por proyecto (Top 20)
   const presupuestoPorProyecto = sumarPorCategoria(
     filas,
     campos.nombreProyecto,
@@ -172,15 +202,13 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
     20
   );
 
-  // Personas atendidas por componente y sede
   const personasPorComponenteYSede = agruparPorDosCategoriasYSumar(
     filas,
     campos.componente,
     campos.sedeDeAtencion,
     campos.cantidad
-  ).slice(0, 30); // Top 30 combinaciones
+  ).slice(0, 30);
 
-  // Personas atendidas por rango de edades y sexo
   const personasPorEdadYSexo = agruparPorDosCategoriasYSumar(
     filas,
     campos.rangosDeEdades,
@@ -188,7 +216,6 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
     campos.cantidad
   );
 
-  // Detección de valores en categoría NO SE SABE
   if (campos.rangosDeEdades) {
     const noSabeValues = filas.filter(f => {
       const rango = String(f[campos.rangosDeEdades] || "").trim();
@@ -199,13 +226,12 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
       const cantidadNoSabe = sumarPorCampo(noSabeValues, campos.cantidad);
       advertencias.push({
         regla: "HC-RANGO-NO-SABE-DETECTADO",
-        tipo: "información",
-        mensaje: `Registros en categoría "NO SE SABE": ${noSabeValues.length} filas, ${cantidadNoSabe.toLocaleString('es-ES')} personas.`
+        tipo: "informacion",
+        mensaje: `Registros en categoria "NO SE SABE": ${noSabeValues.length} filas, ${cantidadNoSabe.toLocaleString("es-ES")} personas.`
       });
     }
   }
 
-  // DASHBOARD NORMALIZADO (con normalizaciones aplicadas)
   const dashboardNormalizado = {
     kpis: {
       totalPersonasAtendidas,
@@ -224,7 +250,6 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
     }
   };
 
-  // DASHBOARD INSTITUCIONAL (usando valores originales, sin normalizar)
   const dashboardInstitucional = {
     kpis: {
       totalPersonasAtendidas,
@@ -237,9 +262,9 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
         const bNum = Number(b.categoria);
         return aNum - bNum;
       }),
-      presupuestoPorProyecto: sumarPorCategoria(filas, '_PROYECTO_ORIGINAL', campos.presupuesto, 20),
-      personasPorComponenteYSede: agruparPorDosCategoriasYSumar(filas, '_COMPONENTE_ORIGINAL', '_SEDE_ORIGINAL', campos.cantidad).slice(0, 30),
-      personasPorEdadYSexo: agruparPorDosCategoriasYSumar(filas, '_RANGOS_EDADES_ORIGINAL', '_SEXO_ORIGINAL', campos.cantidad)
+      presupuestoPorProyecto: sumarPorCategoria(filas, "_PROYECTO_ORIGINAL", campos.presupuesto, 20),
+      personasPorComponenteYSede: agruparPorDosCategoriasYSumar(filas, "_COMPONENTE_ORIGINAL", "_SEDE_ORIGINAL", campos.cantidad).slice(0, 30),
+      personasPorEdadYSexo: agruparPorDosCategoriasYSumar(filas, "_RANGOS_EDADES_ORIGINAL", "_SEXO_ORIGINAL", campos.cantidad)
     }
   };
 
@@ -248,12 +273,14 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
     dashboardNormalizado,
     dashboardInstitucional,
     advertencias,
+    validacionIntegridadRaw,
+    comparacionInstitucional,
     diagnostico: {
-      diferencia: diferencia,
-      diferenciaPorcentaje: parseFloat((Math.abs(diferencia) / cantidadEsperada * 100).toFixed(2)),
-      mensaje: Math.abs(diferencia) > 0
-        ? `${Math.abs(diferencia)} personas faltantes (concentradas en NO SE SABE)`
-        : "Datos completos"
+      diferencia: comparacionInstitucional.diferencia,
+      diferenciaPorcentaje: parseFloat((Math.abs(comparacionInstitucional.diferencia) / TOTAL_TABLERO_INSTITUCIONAL * 100).toFixed(2)),
+      mensaje: comparacionInstitucional.diferencia !== 0
+        ? `${Math.abs(comparacionInstitucional.diferencia)} personas de diferencia frente a referencia institucional (concentradas en NO SE SABE)`
+        : "Datos coinciden con referencia institucional"
     }
   };
 }
