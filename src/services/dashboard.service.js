@@ -1,3 +1,7 @@
+import { crearDashboardBuenComienzo } from "./dashboard-buen-comienzo.service.js";
+import { crearDashboardContratacion } from "./dashboard-contratacion.service.js";
+import { crearDashboardHabitantesCalle } from "./dashboard-habitantes-calle.service.js";
+
 function contarPorCampo(filas,campo){
   if(!campo) return [];
   const conteo=new Map();
@@ -21,7 +25,11 @@ export function crearDashboardPqrsd({filas,campos}){
   };
 }
 
-export function crearDashboard({proceso,filas,campos}){
-  if(String(proceso||"").toUpperCase()==="PQRSD") return crearDashboardPqrsd({filas,campos});
+export function crearDashboard({proceso,filas,campos,validacion}){
+  const procesoNormalizado=String(proceso||"").toUpperCase();
+  if(procesoNormalizado==="PQRSD") return crearDashboardPqrsd({filas,campos});
+  if(procesoNormalizado==="BUEN_COMIENZO") return crearDashboardBuenComienzo({filas,campos});
+  if(procesoNormalizado==="CONTRATACION") return crearDashboardContratacion({filas,campos});
+  if(procesoNormalizado==="HABITANTES_CALLE") return crearDashboardHabitantesCalle({filas,campos,validacion});
   return {totalRegistros:filas.length};
 }

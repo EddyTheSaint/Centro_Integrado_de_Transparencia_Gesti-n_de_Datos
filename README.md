@@ -1,6 +1,6 @@
-# CIT Cargador MVP v0.3
+# CIT Cargador MVP
 
-Vertical local para cargar Excel mensuales, validar estructura, normalizar datos PQRSD sin alterar el RAW, generar reportes y mostrar un dashboard inicial.
+Proyecto local Node/Express para cargar archivos Excel, validar estructura, normalizar datos por proceso y generar reportes/dashboard.
 
 ## Ejecutar
 
@@ -13,49 +13,86 @@ npm run dev
 
 Abre http://localhost:3000
 
-## Probar con el Excel de julio
+## Procesos
 
-1. Selecciona `PQRSD`.
-2. Selecciona el periodo de julio.
-3. Carga el Excel real de julio.
-4. Presiona `Cargar y validar`.
-5. Revisa:
-   - resultado de validacion,
-   - reglas de normalizacion aplicadas,
-   - dashboard PQRSD,
-   - rutas de archivos generados.
+### PQRSD
 
-La carga valida genera archivos en:
+Estado: FUNCIONAL
+
+Flujo actual:
+
+- Excel
+- Multer
+- validacion
+- normalizacion
+- dashboard
+- RAW local
+- normalizado.xlsx
+- validacion.json
+- validacion.xlsx
+- historico.json
+
+### HABITANTES_CALLE
+
+Estado: EN DESARROLLO / VALIDACION
+
+RAW de referencia usado localmente:
+
+```text
+BD_HABITANTE_CALLE_MAYO.xlsx
+```
+
+No incluir el Excel en Git.
+
+Resultado actual esperado del RAW:
+
+- registros fuente: 2187
+- SUM(CANTIDAD): 240960
+- presupuesto total: 561628945101
+
+Rangos normalizados:
+
+- 18 A 28 AÑOS = 41925
+- 29 A 59 AÑOS = 150668
+- 60 AÑOS O MAS = 20362
+- EDAD DESCONOCIDA = 16114
+- NO SE SABE = 11891
+
+Referencia tablero institucional:
+
+```text
+TOTAL = 242986
+```
+
+Diferencia pendiente de investigacion:
+
+```text
+2026 personas, concentradas en NO SE SABE.
+```
+
+Tambien queda pendiente revisar presupuesto 2026.
+
+### BUEN_COMIENZO
+
+Estado: PAUSADO / pendiente confirmar fuente exacta del tablero.
+
+### CONTRATACION
+
+Estado: PAUSADO / pendiente Excel RAW.
+
+## Persistencia
+
+La persistencia actual conserva copia local de los archivos generados en:
 
 ```text
 storage/cargas/<idCarga>/
 ```
 
-## Separacion v0.3
-
-- RAW: copia exacta del archivo recibido.
-- Normalizado: nuevo Excel `normalizado.xlsx`.
-- Reglas aplicadas: arreglo auditado con campo, valor original, valor normalizado, regla y cantidad afectada.
-- Reporte de validacion: `validacion.json` y `validacion.xlsx`.
-- Historico: `historico.json`.
-
-## Normalizacion PQRSD
-
-Los mapeos viven en:
-
-```text
-src/catalogs/pqrsd.catalog.js
-```
-
-No se inventan equivalencias de negocio. Solo se normalizan valores configurados ahi. El RAW no se modifica.
-
-## SharePoint
-
-`src/services/sharepoint.service.js` expone el contrato:
+`src/services/sharepoint.service.js` mantiene el contrato:
 
 - `guardarRaw()`
 - `guardarNormalizado()`
 - `guardarValidacion()`
 - `registrarHistorico()`
 
-Por ahora guarda en local. No implementa Microsoft Graph, no usa credenciales hardcodeadas y queda listo para reemplazar el backend de almacenamiento mas adelante.
+No se versionan archivos RAW, archivos generados, caches, credenciales ni secretos.

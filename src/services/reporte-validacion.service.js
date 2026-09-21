@@ -11,13 +11,14 @@ function contarVaciosPorCampo(filas,campos){
 }
 
 export function crearReporteValidacion({excel,validacion,reglasAplicadas,dashboard}){
+  const campos=validacion.campos || (validacion.hojas?.beneficiarios?.campos);
   return {
-    total_registros:excel.filas.length,
+    total_registros:excel.filas?.length||0,
     errores:validacion.errores||[],
     advertencias:validacion.advertencias||[],
-    campos_vacios:contarVaciosPorCampo(excel.filas,validacion.campos),
+    campos_vacios:campos ? contarVaciosPorCampo(excel.filas||[],campos) : {},
     reglas_aplicadas:reglasAplicadas||[],
-    categorias_detectadas:validacion.resumen?.categoriasDetectadas||{},
+    categorias_detectadas:validacion.resumen?.categoriasDetectadas || validacion.hojas?.beneficiarios?.resumen?.categoriasDetectadas||{},
     dashboard
   };
 }
