@@ -42,16 +42,42 @@ function normalizarSexoPbix(valor) {
   return "No informa";
 }
 
+const CATALOGO_TERRITORIAL = {
+  "1": "1 POPULAR",
+  "2": "2 SANTA CRUZ",
+  "3": "3 MANRIQUE",
+  "4": "4 ARANJUEZ",
+  "5": "5 CASTILLA",
+  "6": "6 DOCE DE OCTUBRE",
+  "7": "7 ROBLEDO",
+  "8": "8 VILLAHERMOSA",
+  "9": "9 BUENOS AIRES",
+  "10": "10 LA CANDELARIA",
+  "11": "11 LAURELES-ESTADIO",
+  "12": "12 LA AMERICA",
+  "13": "13 SAN JAVIER",
+  "14": "14 EL POBLADO",
+  "15": "15 GUAYABAL",
+  "16": "16 BELEN",
+  "50": "50 SAN SEBASTIAN DE PALMITAS",
+  "60": "60 SAN CRISTOBAL",
+  "70": "70 ALTAVISTA",
+  "80": "80 SAN ANTONIO DE PRADO",
+  "90": "90 SANTA ELENA"
+};
+
 function normalizarComunaPbix(valor) {
   const limpio = String(valor ?? "").trim();
-  if (!limpio) return "No informa";
+  if (!limpio) return "NO_INFORMADO";
   const c = canon(limpio);
-  if (["N/A", "NO ENCUESTADO", "SIN INFORMACION"].includes(c)) return "No informa";
-  if (c === "VARIAS") return "Varias";
-  if (c === "VIRTUAL") return "Virtual";
+  if (["N/A", "NO ENCUESTADO", "SIN INFORMACION", "NO RESPONDE", "SIN RESPUESTA", "NO CONTESTA"].includes(c)) {
+    return "NO_INFORMADO";
+  }
+  if (c === "VARIAS") return "VARIAS";
+  if (c === "VIRTUAL") return "VIRTUAL";
   const match = limpio.match(/^(\d{1,2})\b/);
-  if (!match) return limpio;
-  return `Comuna ${match[1]}`;
+  if (match && CATALOGO_TERRITORIAL[match[1]]) return CATALOGO_TERRITORIAL[match[1]];
+  return limpio.toUpperCase();
 }
 
 export function normalizarEncuentrosCiudad({ filas, campos }) {
@@ -91,6 +117,7 @@ export function normalizarEncuentrosCiudad({ filas, campos }) {
 
     if (campos.comuna) {
       normalizada["Comuna Normalizada"] = normalizarComunaPbix(fila[campos.comuna]);
+      normalizada["COMUNA_NORMALIZADA"] = normalizada["Comuna Normalizada"];
     }
     if (campos.sexo) {
       normalizada["Sexo Normalizado"] = normalizarSexoPbix(fila[campos.sexo]);

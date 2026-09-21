@@ -146,3 +146,75 @@ Los 62 registros no son invalidos: corresponden a fechas con año `26`, interpre
 - Confirmar el DAX real de `Total Encuentros` y `Promedio Asistentes por Encuentro` desde Power BI Desktop o Tabular Editor.
 - Comparar contra valores renderizados del PBIX si se exportan datos o captura de visuales.
 - Definir si variantes como `Exe`, `Buena`, `Otro` deben normalizarse o mantenerse como categorias originales.
+
+## Ajuste Sexo, Comunas y Anos
+
+### Sexo
+
+| Metrica | Valor |
+| --- | ---: |
+| Femenino | 2641 |
+| Masculino | 1736 |
+| No informado | 99 |
+| Total sexo informado | 4377 |
+| % mujeres sobre total | 59.0 |
+| % mujeres sobre sexo informado | 60.3 |
+
+El PBIX no expone el DAX de `% Mujeres Asistentes` ni el valor renderizado. En `dashboardInstitucional` se usa `% mujeres sobre sexo informado` por compatibilidad con el nombre de la medida, y en `dashboardNormalizado` se conservan ambos denominadores.
+
+### Comunas Normalizadas
+
+La normalizacion territorial usa codigo conocido como clave canonica. Ejemplos:
+
+- `8`, `8 Villahermosa`, `8 Villa hermosa` -> `8 VILLAHERMOSA`
+- `9`, `9 Buenos Aires`, `9 Buenos aires` -> `9 BUENOS AIRES`
+- `80`, `80 San Antonio de Prado`, `80 San antonio de prado` -> `80 SAN ANTONIO DE PRADO`
+
+`VARIAS` se mantiene como categoria propia, `VIRTUAL` se mantiene, y `N/A` / respuestas no informadas pasan a `NO_INFORMADO`.
+
+Top 15 normalizado:
+
+| Comuna | Asistentes |
+| --- | ---: |
+| 8 VILLAHERMOSA | 527 |
+| 9 BUENOS AIRES | 412 |
+| 80 SAN ANTONIO DE PRADO | 384 |
+| VARIAS | 358 |
+| 10 LA CANDELARIA | 275 |
+| 15 GUAYABAL | 246 |
+| 16 BELEN | 242 |
+| 5 CASTILLA | 237 |
+| 50 SAN SEBASTIAN DE PALMITAS | 230 |
+| 13 SAN JAVIER | 214 |
+| 12 LA AMERICA | 207 |
+| 1 POPULAR | 161 |
+| 7 ROBLEDO | 155 |
+| 3 MANRIQUE | 133 |
+| 4 ARANJUEZ | 120 |
+
+Suma antes de normalizar: 4476. Suma despues de normalizar: 4476.
+
+### Anos
+
+| Ano | Registros |
+| --- | ---: |
+| 2022 | 1640 |
+| 2023 | 1443 |
+| 2024 | 837 |
+| 2025 | 494 |
+| 2026 | 62 |
+| SIN_AÑO_RECONOCIDO | 0 |
+
+Los 62 registros con `4/14/26` se reconocen como 2026 porque `MM/dd/yy` es inequívoco para ese valor y `dd/MM/yy` seria invalido por mes 14.
+
+### Comparacion PBIX
+
+| METRICA | PBIX | CARGADOR | DIFERENCIA | ESTADO |
+| --- | --- | --- | --- | --- |
+| % Mujeres | N/D | 60.3 | N/D | PBIX sin valor renderizado extraible |
+| Asistentes por ano | N/D | 2022=1640, 2023=1443, 2024=837, 2025=494, 2026=62 | N/D | PBIX sin valor renderizado extraible |
+| 8 VILLAHERMOSA | N/D | 527 | N/D | PBIX sin valor renderizado extraible |
+| 9 BUENOS AIRES | N/D | 412 | N/D | PBIX sin valor renderizado extraible |
+| 80 SAN ANTONIO DE PRADO | N/D | 384 | N/D | PBIX sin valor renderizado extraible |
+| 5 CASTILLA | N/D | 237 | N/D | PBIX sin valor renderizado extraible |
+| 1 POPULAR | N/D | 161 | N/D | PBIX sin valor renderizado extraible |

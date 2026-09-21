@@ -115,6 +115,45 @@
     "2025": 494,
     "2026": 62
   },
+  "sexo": {
+    "femenino": 2641,
+    "masculino": 1736,
+    "noInformado": 99,
+    "totalSexoInformado": 4377,
+    "totalSexoNoInformado": 99,
+    "porcentajeMujeresSobreTotal": 59,
+    "porcentajeMujeresSobreSexoInformado": 60.3,
+    "criterioInstitucionalLocal": "SEXO_INFORMADO_POR_COMPATIBILIDAD_CON_MEDIDA_PBIX_NO_EXTRAIBLE"
+  },
+  "comunasNormalizadasTop15": [
+    { "categoria": "8 VILLAHERMOSA", "total": 527 },
+    { "categoria": "9 BUENOS AIRES", "total": 412 },
+    { "categoria": "80 SAN ANTONIO DE PRADO", "total": 384 },
+    { "categoria": "VARIAS", "total": 358 },
+    { "categoria": "10 LA CANDELARIA", "total": 275 },
+    { "categoria": "15 GUAYABAL", "total": 246 },
+    { "categoria": "16 BELEN", "total": 242 },
+    { "categoria": "5 CASTILLA", "total": 237 },
+    { "categoria": "50 SAN SEBASTIAN DE PALMITAS", "total": 230 },
+    { "categoria": "13 SAN JAVIER", "total": 214 },
+    { "categoria": "12 LA AMERICA", "total": 207 },
+    { "categoria": "1 POPULAR", "total": 161 },
+    { "categoria": "7 ROBLEDO", "total": 155 },
+    { "categoria": "3 MANRIQUE", "total": 133 },
+    { "categoria": "4 ARANJUEZ", "total": 120 }
+  ],
+  "comparacionPbix": {
+    "nota": "Los valores renderizados y el DAX de las medidas PBIX no estan disponibles en el JSON extraido localmente.",
+    "tabla": [
+      { "METRICA": "% Mujeres", "PBIX": null, "CARGADOR": 60.3, "DIFERENCIA": null, "ESTADO": "PBIX_SIN_VALOR_RENDERIZADO_EXTRAIBLE" },
+      { "METRICA": "Asistentes por año", "PBIX": null, "CARGADOR": { "2022": 1640, "2023": 1443, "2024": 837, "2025": 494, "2026": 62 }, "DIFERENCIA": null, "ESTADO": "PBIX_SIN_VALOR_RENDERIZADO_EXTRAIBLE" },
+      { "METRICA": "8 VILLAHERMOSA", "PBIX": null, "CARGADOR": 527, "DIFERENCIA": null, "ESTADO": "PBIX_SIN_VALOR_RENDERIZADO_EXTRAIBLE" },
+      { "METRICA": "9 BUENOS AIRES", "PBIX": null, "CARGADOR": 412, "DIFERENCIA": null, "ESTADO": "PBIX_SIN_VALOR_RENDERIZADO_EXTRAIBLE" },
+      { "METRICA": "80 SAN ANTONIO DE PRADO", "PBIX": null, "CARGADOR": 384, "DIFERENCIA": null, "ESTADO": "PBIX_SIN_VALOR_RENDERIZADO_EXTRAIBLE" },
+      { "METRICA": "5 CASTILLA", "PBIX": null, "CARGADOR": 237, "DIFERENCIA": null, "ESTADO": "PBIX_SIN_VALOR_RENDERIZADO_EXTRAIBLE" },
+      { "METRICA": "1 POPULAR", "PBIX": null, "CARGADOR": 161, "DIFERENCIA": null, "ESTADO": "PBIX_SIN_VALOR_RENDERIZADO_EXTRAIBLE" }
+    ]
+  },
   "diferencias": {
     "conteo4476vs4478": "El rango del Excel contiene 4478 filas de datos fisicas, pero las ultimas 2 estan completamente vacias; sheet_to_json sin blankrows devuelve 4476 registros reales.",
     "pbixVsRaw": "No se extrajeron valores renderizados ni DAX de medidas desde el PBIX local; la comparacion queda documentada con valorPbix=null."

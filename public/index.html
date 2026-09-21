@@ -198,19 +198,20 @@ function renderDashboard(dashboard,proceso){
     const inst=dashboard.dashboardInstitucional||{};
     const normalizado=dashboard.dashboardNormalizado||{};
     const kpis=inst.kpis||normalizado.kpis||{};
+    const sexo=normalizado.kpis?.sexo||dashboard.sexo||{};
     const graficas=normalizado.graficas||{};
     title.textContent="Dashboard Encuentros de Ciudad";
     kpisDiv.hidden=false;
     kpisDiv.innerHTML=[
       metric("Total Asistentes",(kpis.totalAsistentes||dashboard.totalRegistros||0).toLocaleString('es-ES')),
-      metric("Total Encuentros",(kpis.totalEncuentros||dashboard.totalEventosProvisional||0).toLocaleString('es-ES')),
-      metric("Promedio Asistentes",(kpis.promedioAsistentesPorEncuentro||dashboard.promedioAsistentesProvisional||0).toLocaleString('es-ES')),
-      metric("% Mujeres",`${kpis.porcentajeMujeres||0}%`)
+      metric("% Mujeres",`${kpis.porcentajeMujeres||sexo.porcentajeMujeresSobreSexoInformado||0}%`),
+      metric("% Hombres",`${kpis.porcentajeHombres||sexo.porcentajeHombresSobreSexoInformado||0}%`),
+      metric("Sexo no informado",(kpis.totalSexoNoInformado||sexo.totalSexoNoInformado||0).toLocaleString('es-ES'))
     ].join("");
     chartsDiv.innerHTML=[
       `<div class="full"><p class="muted">${dashboard.notaDefinicionEvento||""}</p></div>`,
       chart("Asistentes por a&ntilde;o",graficas.asistentesPorAno||[]),
-      chart("Asistentes por comuna",graficas.asistentesPorComuna||dashboard.porComuna||[]),
+      chart("Asistentes por comuna normalizada",graficas.asistentesPorComuna||dashboard.porComunaNormalizada||dashboard.porComuna||[]),
       chart("Asistentes por sexo",graficas.asistentesPorSexo||dashboard.porSexo||[]),
       chart("Satisfacci&oacute;n del evento",graficas.satisfaccionEvento||dashboard.satisfaccionEvento?.distribucion||[]),
       chart("Conoce la Contralor&iacute;a",graficas.conoceContraloria||[]),
