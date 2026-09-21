@@ -1,0 +1,122 @@
+{
+  "proceso": "ENCUENTROS_DE_CIUDAD",
+  "raw": {
+    "archivo": "referencias/ENCUENTRO DE CIUDAD MAYO.xlsx",
+    "hoja": "asistencia y encues 23-22",
+    "ref": "A1:AF4479",
+    "filasFisicasDatos": 4478,
+    "filasDatosReales": 4476,
+    "filasTotalmenteVacias": 2
+  },
+  "pbix": {
+    "archivo": "referencias/OBSERVATORIO.pbix",
+    "paginaId": "fe75146cb079345ede3a",
+    "displayName": "Encuentros de Ciudad",
+    "valoresRenderizadosDisponibles": false,
+    "daxExtraible": false
+  },
+  "medidasDetectadas": [
+    "Total Asistentes",
+    "% Mujeres Asistentes",
+    "% Hombres Asistentes",
+    "Total Encuentros",
+    "Promedio Asistentes por Encuentro"
+  ],
+  "visuales": [
+    {
+      "visualId": "c8e3bc569c0a5e698071",
+      "tipo": "slicer",
+      "campoCategoria": "Calendario.Año",
+      "campoValor": null,
+      "agregacion": null,
+      "filtro": "2022, 2023, 2024, 2025, 2026"
+    },
+    {
+      "visualId": "b362c24c0ae9b82d6017",
+      "tipo": "slicer",
+      "campoCategoria": "asistencia y encues 23-22.Comuna Normalizada",
+      "campoValor": null,
+      "agregacion": null,
+      "filtro": null
+    },
+    {
+      "visualId": "827b37260a9e953de546",
+      "tipo": "cardVisual",
+      "campoCategoria": null,
+      "campoValor": "Total Asistentes",
+      "agregacion": "Measure",
+      "valorLocal": 4476,
+      "valorPbix": null
+    },
+    {
+      "visualId": "97ad86ae0da59c9349d5",
+      "tipo": "cardVisual",
+      "campoCategoria": null,
+      "campoValor": "% Mujeres Asistentes",
+      "agregacion": "Measure",
+      "valorLocal": 60.3,
+      "valorPbix": null
+    },
+    {
+      "visualId": "a7cd624f6698b0fa0280",
+      "tipo": "cardVisual",
+      "campoCategoria": null,
+      "campoValor": "% Hombres Asistentes",
+      "agregacion": "Measure",
+      "valorLocal": 39.7,
+      "valorPbix": null
+    },
+    {
+      "visualId": "kp1EncTotalEnc0nt",
+      "tipo": "cardVisual",
+      "campoCategoria": null,
+      "campoValor": "Total Encuentros",
+      "agregacion": "Measure",
+      "valorLocal": 38,
+      "valorPbix": null
+    },
+    {
+      "visualId": "kp1EncPr0medi0As1",
+      "tipo": "cardVisual",
+      "campoCategoria": null,
+      "campoValor": "Promedio Asistentes por Encuentro",
+      "agregacion": "Measure",
+      "valorLocal": 117.8,
+      "valorPbix": null
+    },
+    {
+      "visualId": "chtEncSat1sfacc10n",
+      "tipo": "barChart",
+      "campoCategoria": "Nivel de Satisfacción Normalizado",
+      "campoValor": "Total Asistentes",
+      "agregacion": "Measure",
+      "filtro": "Excluye N/A y No Encuestado"
+    },
+    {
+      "visualId": "chtEncC0n0ceCtrl1a",
+      "tipo": "donutChart",
+      "campoCategoria": "Conoce la Contraloría Normalizado",
+      "campoValor": "Total Asistentes",
+      "agregacion": "Measure",
+      "filtro": "Incluye No y Sí"
+    }
+  ],
+  "candidatosDefinicionEvento": {
+    "A_FECHA_LUGAR": 38,
+    "B_FECHA_LUGAR_COMUNA_EVENTO": 67,
+    "C_DISTINCT_COMUNA_EVENTO": 60,
+    "D_DISTINCT_FECHA": 31,
+    "E_FECHA_LUGAR_COMUNA_RAW": 112
+  },
+  "registrosPorAno": {
+    "2022": 1640,
+    "2023": 1443,
+    "2024": 837,
+    "2025": 494,
+    "2026": 62
+  },
+  "diferencias": {
+    "conteo4476vs4478": "El rango del Excel contiene 4478 filas de datos fisicas, pero las ultimas 2 estan completamente vacias; sheet_to_json sin blankrows devuelve 4476 registros reales.",
+    "pbixVsRaw": "No se extrajeron valores renderizados ni DAX de medidas desde el PBIX local; la comparacion queda documentada con valorPbix=null."
+  }
+}

@@ -18,6 +18,42 @@ function registrarAplicacion(registros, campo, valorOriginal, valorNormalizado, 
   registros.set(clave, actual);
 }
 
+function normalizarEtiqueta(valor) {
+  const limpio = String(valor ?? "").trim();
+  if (!limpio) return "No informa";
+  const c = canon(limpio);
+  if (["N/A", "NO ENCUESTADO", "SIN INFORMACION", "NO RESPONDE", "SIN RESPUESTA", "NO CONTESTA"].includes(c)) {
+    return limpio.toUpperCase() === "N/A" ? "N/A" : "No Encuestado";
+  }
+  return limpio.charAt(0).toUpperCase() + limpio.slice(1).toLowerCase();
+}
+
+function normalizarSiNoPbix(valor) {
+  const c = canon(valor);
+  if (c === "SI" || c === "S") return "Sí";
+  if (c === "NO") return "No";
+  return "No informa";
+}
+
+function normalizarSexoPbix(valor) {
+  const c = canon(valor);
+  if (c === "F" || c === "FEMENINO") return "Femenino";
+  if (c === "M" || c === "MASCULINO") return "Masculino";
+  return "No informa";
+}
+
+function normalizarComunaPbix(valor) {
+  const limpio = String(valor ?? "").trim();
+  if (!limpio) return "No informa";
+  const c = canon(limpio);
+  if (["N/A", "NO ENCUESTADO", "SIN INFORMACION"].includes(c)) return "No informa";
+  if (c === "VARIAS") return "Varias";
+  if (c === "VIRTUAL") return "Virtual";
+  const match = limpio.match(/^(\d{1,2})\b/);
+  if (!match) return limpio;
+  return `Comuna ${match[1]}`;
+}
+
 export function normalizarEncuentrosCiudad({ filas, campos }) {
   const registros = new Map();
   const advertenciasDetectadas = [];
@@ -51,6 +87,19 @@ export function normalizarEncuentrosCiudad({ filas, campos }) {
     }
     if (campos.canalAtencion) {
       normalizada['_CANAL_ORIGINAL'] = fila[campos.canalAtencion];
+    }
+
+    if (campos.comuna) {
+      normalizada["Comuna Normalizada"] = normalizarComunaPbix(fila[campos.comuna]);
+    }
+    if (campos.sexo) {
+      normalizada["Sexo Normalizado"] = normalizarSexoPbix(fila[campos.sexo]);
+    }
+    if (campos.conoceContraloria) {
+      normalizada["Conoce la Contraloría Normalizado"] = normalizarSiNoPbix(fila[campos.conoceContraloria]);
+    }
+    if (campos.satisfaccionEvento) {
+      normalizada["Nivel de Satisfacción Normalizado"] = normalizarEtiqueta(fila[campos.satisfaccionEvento]);
     }
 
     // Normalizar SEXO

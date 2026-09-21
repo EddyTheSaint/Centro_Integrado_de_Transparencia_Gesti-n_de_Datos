@@ -194,6 +194,28 @@ function renderDashboard(dashboard,proceso){
       chart("Personas por rango de edades y sexo",chartItemsAgrupados(dashboard.graficas?.personasPorRangoEdadSexo,"/")),
       chart("Personas atendidas por sexo",dashboard.graficas?.personasPorSexo||[])
     ].join("");
+  }else if(proceso==="ENCUENTROS_DE_CIUDAD" || dashboard.proceso==="ENCUENTROS_DE_CIUDAD"){
+    const inst=dashboard.dashboardInstitucional||{};
+    const normalizado=dashboard.dashboardNormalizado||{};
+    const kpis=inst.kpis||normalizado.kpis||{};
+    const graficas=normalizado.graficas||{};
+    title.textContent="Dashboard Encuentros de Ciudad";
+    kpisDiv.hidden=false;
+    kpisDiv.innerHTML=[
+      metric("Total Asistentes",(kpis.totalAsistentes||dashboard.totalRegistros||0).toLocaleString('es-ES')),
+      metric("Total Encuentros",(kpis.totalEncuentros||dashboard.totalEventosProvisional||0).toLocaleString('es-ES')),
+      metric("Promedio Asistentes",(kpis.promedioAsistentesPorEncuentro||dashboard.promedioAsistentesProvisional||0).toLocaleString('es-ES')),
+      metric("% Mujeres",`${kpis.porcentajeMujeres||0}%`)
+    ].join("");
+    chartsDiv.innerHTML=[
+      `<div class="full"><p class="muted">${dashboard.notaDefinicionEvento||""}</p></div>`,
+      chart("Asistentes por a&ntilde;o",graficas.asistentesPorAno||[]),
+      chart("Asistentes por comuna",graficas.asistentesPorComuna||dashboard.porComuna||[]),
+      chart("Asistentes por sexo",graficas.asistentesPorSexo||dashboard.porSexo||[]),
+      chart("Satisfacci&oacute;n del evento",graficas.satisfaccionEvento||dashboard.satisfaccionEvento?.distribucion||[]),
+      chart("Conoce la Contralor&iacute;a",graficas.conoceContraloria||[]),
+      chart("Canal de atenci&oacute;n",graficas.canalAtencion||dashboard.porCanalAtencion||[])
+    ].join("");
   }else if(dashboard.kpis?.numeroDeContratos !== undefined){
     title.textContent="Dashboard Contratación";
     kpisDiv.hidden=false;

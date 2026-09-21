@@ -1,19 +1,32 @@
-function contarPorCampo(filas, campo) {
+import { canon } from "../validators/utils.js";
+
+function contarPorCampo(filas, campo, opciones = {}) {
   if (!campo) return [];
+  const excluir = new Set((opciones.excluir || []).map(canon));
   const conteo = new Map();
+
   for (const fila of filas) {
     const valor = fila[campo];
-    const etiqueta = valor == null || String(valor).trim() === "" ? "(VACÍO)" : String(valor).trim();
+    const etiqueta = valor == null || String(valor).trim() === "" ? "(VACIO)" : String(valor).trim();
+    if (excluir.has(canon(etiqueta))) continue;
     conteo.set(etiqueta, (conteo.get(etiqueta) || 0) + 1);
   }
+
   return [...conteo.entries()]
     .map(([categoria, total]) => ({ categoria, total }))
     .sort((a, b) => b.total - a.total || a.categoria.localeCompare(b.categoria));
 }
 
 function calcularPorcentaje(conDato, totalDatos) {
-  if (totalDatos === 0) return 0;
-  return ((conDato / totalDatos) * 100).toFixed(1);
+  if (!totalDatos) return 0;
+  return Number(((conDato / totalDatos) * 100).toFixed(1));
+}
+
+function normalizarSiNo(valor) {
+  const c = canon(valor);
+  if (c === "SI" || c === "S") return "SI";
+  if (c === "NO") return "NO";
+  return "NO_INFORMADO";
 }
 
 function analizarSiNo(filas, campo) {
@@ -25,194 +38,247 @@ function analizarSiNo(filas, campo) {
     porcentajeSi: 0
   };
 
+  if (!campo) {
+    resultado.noInformado = filas.length;
+    return resultado;
+  }
+
   for (const fila of filas) {
-    const valor = String(fila[campo] || "").trim().toUpperCase();
-    if (valor === "SI") {
-      resultado.si++;
-    } else if (valor === "NO") {
-      resultado.no++;
-    } else if (valor !== "") {
-      resultado.noInformado++;
-    } else {
-      resultado.noInformado++;
-    }
+    const valor = normalizarSiNo(fila[campo]);
+    if (valor === "SI") resultado.si++;
+    else if (valor === "NO") resultado.no++;
+    else resultado.noInformado++;
   }
 
   resultado.total = resultado.si + resultado.no;
-  resultado.porcentajeSi = resultado.total > 0
-    ? calcularPorcentaje(resultado.si, resultado.total)
-    : 0;
-
+  resultado.porcentajeSi = calcularPorcentaje(resultado.si, resultado.total);
   return resultado;
 }
 
-function calcularEventos(filas, campoFecha, campoLugar, campoComuna) {
-  // Definición A: FECHA + LUGAR
-  const eventosA = new Set();
-  // Definición B: FECHA + LUGAR + Comuna/Evento
-  const eventosB = new Set();
+function valorTexto(fila, campo) {
+  return campo && fila[campo] != null ? String(fila[campo]).trim() : "";
+}
+
+function obtenerAno(fecha) {
+  const texto = String(fecha ?? "").trim();
+  if (!texto) return null;
+  const partes = texto.split("/");
+  if (partes.length === 3) {
+    let ano = Number(partes[2]);
+    if (ano >= 0 && ano < 100) ano += 2000;
+    if (ano >= 1900 && ano <= 2100) return ano;
+  }
+  const parsed = new Date(texto);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.getFullYear();
+}
+
+function contarPorAno(filas, campoFecha) {
+  const conteo = {};
+  let sinAno = 0;
 
   for (const fila of filas) {
-    const fecha = fila[campoFecha];
-    const lugar = fila[campoLugar];
-    const comuna = fila[campoComuna];
-
-    if (fecha && lugar) {
-      const claveA = fecha + "|" + lugar;
-      eventosA.add(claveA);
-
-      if (comuna) {
-        const claveB = claveA + "|" + comuna;
-        eventosB.add(claveB);
-      }
-    }
+    const ano = obtenerAno(fila[campoFecha]);
+    if (!ano) sinAno++;
+    else conteo[ano] = (conteo[ano] || 0) + 1;
   }
 
   return {
-    definicion_fecha_lugar: eventosA.size,
-    definicion_fecha_lugar_comuna: eventosB.size,
-    promedioAsistentes_A: filas.length > 0 ? (filas.length / eventosA.size).toFixed(1) : 0,
-    promedioAsistentes_B: filas.length > 0 && eventosB.size > 0 ? (filas.length / eventosB.size).toFixed(1) : 0
+    conteo,
+    serie: Object.entries(conteo)
+      .map(([categoria, total]) => ({ categoria, total }))
+      .sort((a, b) => Number(a.categoria) - Number(b.categoria)),
+    sinAno
+  };
+}
+
+function calcularEventos(filas, campos) {
+  const candidatos = {
+    fecha_lugar: new Set(),
+    fecha_lugar_comunaEvento: new Set(),
+    comunaEvento: new Set(),
+    fecha: new Set(),
+    fecha_lugar_comunaRaw: new Set()
+  };
+
+  for (const fila of filas) {
+    const fecha = valorTexto(fila, campos.fechaEvento);
+    const lugar = valorTexto(fila, campos.lugarEvento);
+    const comunaEvento = valorTexto(fila, campos.comunaEvento);
+    const comuna = valorTexto(fila, campos.comuna);
+
+    if (fecha && lugar) candidatos.fecha_lugar.add(`${fecha}|${lugar}`);
+    if (fecha && lugar && comunaEvento) candidatos.fecha_lugar_comunaEvento.add(`${fecha}|${lugar}|${comunaEvento}`);
+    if (comunaEvento) candidatos.comunaEvento.add(comunaEvento);
+    if (fecha) candidatos.fecha.add(fecha);
+    if (fecha && lugar && comuna) candidatos.fecha_lugar_comunaRaw.add(`${fecha}|${lugar}|${comuna}`);
+  }
+
+  const totalA = candidatos.fecha_lugar.size;
+  const totalB = candidatos.fecha_lugar_comunaEvento.size;
+
+  return {
+    definicion_fecha_lugar: totalA,
+    definicion_fecha_lugar_comuna: totalB,
+    promedioAsistentes_A: totalA ? Number((filas.length / totalA).toFixed(1)) : 0,
+    promedioAsistentes_B: totalB ? Number((filas.length / totalB).toFixed(1)) : 0,
+    candidatos: {
+      A_FECHA_LUGAR: totalA,
+      B_FECHA_LUGAR_COMUNA_EVENTO: totalB,
+      C_DISTINCT_COMUNA_EVENTO: candidatos.comunaEvento.size,
+      D_DISTINCT_FECHA: candidatos.fecha.size,
+      E_FECHA_LUGAR_COMUNA_RAW: candidatos.fecha_lugar_comunaRaw.size
+    }
+  };
+}
+
+function calcularSexo(filas, campoSexoNormalizado, campoSexoOriginal) {
+  let mujeres = 0;
+  let hombres = 0;
+  let noInforma = 0;
+
+  for (const fila of filas) {
+    const valor = canon(fila[campoSexoNormalizado] ?? fila[campoSexoOriginal]);
+    if (valor === "FEMENINO" || valor === "F") mujeres++;
+    else if (valor === "MASCULINO" || valor === "M") hombres++;
+    else noInforma++;
+  }
+
+  const respondidos = mujeres + hombres;
+  return {
+    mujeres,
+    hombres,
+    noInforma,
+    respondidos,
+    porcentajeMujeres: calcularPorcentaje(mujeres, respondidos),
+    porcentajeHombres: calcularPorcentaje(hombres, respondidos)
   };
 }
 
 export function crearDashboardEncuentrosCiudad({ filas, campos, validacion }) {
-  // KPIs principales
   const totalRegistros = filas.length;
-  const eventos = calcularEventos(
-    filas,
-    campos.fechaEvento,
-    campos.lugarEvento,
-    campos.comunaEvento
-  );
+  const eventos = calcularEventos(filas, campos);
+  const registrosPorAno = contarPorAno(filas, campos.fechaEvento);
+  const sexo = calcularSexo(filas, "Sexo Normalizado", campos.sexo);
 
-  // Análisis de contacto
   const tieneCelular = analizarSiNo(filas, campos.tieneCelular);
   const tieneCorreo = analizarSiNo(filas, campos.tieneCorreo);
-
-  // Análisis de conocimiento de la contraloría
   const conoceContraloria = analizarSiNo(filas, campos.conoceContraloria);
-
-  // Análisis de interés en volver
   const interesVolver = analizarSiNo(filas, campos.interesVolver);
 
-  // Distribuciones
-  const porSexo = contarPorCampo(filas, campos.sexo);
+  const porSexo = contarPorCampo(filas, "Sexo Normalizado");
   const porRangoEdad = contarPorCampo(filas, campos.rangoEdad);
-  const porComuna = contarPorCampo(filas, campos.comuna);
-  const porSatisfaccion = contarPorCampo(filas, campos.satisfaccionEvento);
+  const porComuna = contarPorCampo(filas, "Comuna Normalizada");
+  const porSatisfaccion = contarPorCampo(filas, "Nivel de Satisfacción Normalizado", {
+    excluir: ["N/A", "No Encuestado", "No informa"]
+  });
+  const porConoceContraloria = contarPorCampo(filas, "Conoce la Contraloría Normalizado", {
+    excluir: ["No informa"]
+  });
+  const porCanalAtencion = contarPorCampo(filas, campos.canalAtencion);
 
-  // Análisis temporal (por año)
-  const registrosPorAño = {};
-  if (campos.fechaEvento) {
-    for (const fila of filas) {
-      const fecha = fila[campos.fechaEvento];
-      if (fecha && String(fecha).trim() !== "") {
-        try {
-          const partes = String(fecha).trim().split('/');
-          if (partes.length === 3) {
-            const año = parseInt(partes[2]);
-            if (año >= 1900 && año <= 2100) {
-              registrosPorAño[año] = (registrosPorAño[año] || 0) + 1;
-            }
-          }
-        } catch (e) {
-          // Ignorar errores de parseo
-        }
-      }
-    }
-  }
+  const totalEncuentros = eventos.definicion_fecha_lugar;
+  const promedioAsistentes = eventos.promedioAsistentes_A;
 
-  // Preparar datos de satisfacción (excluyendo no informados)
-  const satisfaccionConDato = porSatisfaccion.filter(
-    item => !["(VACÍO)", "no encuestado", "N/A", "sin información", "no responde"].includes(item.categoria)
-  );
+  const kpisInstitucionales = {
+    totalAsistentes: totalRegistros,
+    porcentajeMujeres: sexo.porcentajeMujeres,
+    porcentajeHombres: sexo.porcentajeHombres,
+    totalEncuentros,
+    promedioAsistentesPorEncuentro: promedioAsistentes
+  };
 
-  // Calcular métricas de satisfacción
-  let excelenteMasbueno = 0;
-  for (const item of satisfaccionConDato) {
-    if (["excelente", "exe", "Excelente ", "excelente", "bueno", "buena"].includes(item.categoria.toLowerCase())) {
-      excelenteMasbueno += item.total;
-    }
-  }
-  const satisfaccionPositiva = satisfaccionConDato.length > 0
-    ? calcularPorcentaje(excelenteMasbueno, satisfaccionConDato.reduce((sum, item) => sum + item.total, 0))
-    : 0;
+  const dashboardInstitucional = {
+    pagina: "Encuentros de Ciudad",
+    pageId: "fe75146cb079345ede3a",
+    fuente: "referencias/OBSERVATORIO.pbix",
+    estadoDax: "NO_EXTRAIBLE_DESDE_PBIX_LOCAL",
+    kpis: kpisInstitucionales,
+    graficas: {
+      satisfaccionEvento: porSatisfaccion,
+      conoceContraloria: porConoceContraloria,
+      filtroAno: registrosPorAno.serie,
+      filtroComuna: porComuna
+    },
+    visualesPbix: [
+      { id: "827b37260a9e953de546", tipo: "cardVisual", medida: "Total Asistentes", valorLocal: totalRegistros },
+      { id: "97ad86ae0da59c9349d5", tipo: "cardVisual", medida: "% Mujeres Asistentes", valorLocal: sexo.porcentajeMujeres },
+      { id: "a7cd624f6698b0fa0280", tipo: "cardVisual", medida: "% Hombres Asistentes", valorLocal: sexo.porcentajeHombres },
+      { id: "kp1EncTotalEnc0nt", tipo: "cardVisual", medida: "Total Encuentros", valorLocal: totalEncuentros },
+      { id: "kp1EncPr0medi0As1", tipo: "cardVisual", medida: "Promedio Asistentes por Encuentro", valorLocal: promedioAsistentes },
+      { id: "chtEncSat1sfacc10n", tipo: "barChart", categoria: "Nivel de Satisfacción Normalizado", valor: "Total Asistentes" },
+      { id: "chtEncC0n0ceCtrl1a", tipo: "donutChart", categoria: "Conoce la Contraloría Normalizado", valor: "Total Asistentes" }
+    ]
+  };
 
   return {
-    // KPIs principales
+    proceso: "ENCUENTROS_DE_CIUDAD",
     totalRegistros,
-    totalEventosProvisional: eventos.definicion_fecha_lugar,
+    totalEventosProvisional: totalEncuentros,
     totalEventosAlternativa: eventos.definicion_fecha_lugar_comuna,
-    promedioAsistentesProvisional: eventos.promedioAsistentes_A,
+    promedioAsistentesProvisional: promedioAsistentes,
     promedioAsistentesAlternativa: eventos.promedioAsistentes_B,
-
-    // Nota sobre definición provisional de evento
     notaDefinicionEvento:
-      "PROVISIONAL: Usa FECHA + LUGAR como clave de evento. Pendiente confirmar definición institucional.",
+      "PBIX usa la medida Total Encuentros, pero el DAX no es extraible desde el PBIX local. El valor local usa FECHA DEL EVENTO + LUGAR DEL EVENTO.",
 
-    // Contacto
     tieneCelular: {
       ...tieneCelular,
-      porcentajeSobreRespondidos: calcularPorcentaje(tieneCelular.si, tieneCelular.total)
+      porcentajeSobreRespondidos: tieneCelular.porcentajeSi
     },
-
     tieneCorreo: {
       ...tieneCorreo,
-      porcentajeSobreRespondidos: calcularPorcentaje(tieneCorreo.si, tieneCorreo.total)
+      porcentajeSobreRespondidos: tieneCorreo.porcentajeSi
     },
-
-    // Conocimiento institucional
     conoceContraloria: {
       ...conoceContraloria,
-      porcentajeSobreRespondidos: calcularPorcentaje(conoceContraloria.si, conoceContraloria.total)
+      porcentajeSobreRespondidos: conoceContraloria.porcentajeSi
     },
-
-    // Interés en participar nuevamente
     interesVolver: {
       ...interesVolver,
-      porcentajeSobreRespondidos: calcularPorcentaje(interesVolver.si, interesVolver.total)
+      porcentajeSobreRespondidos: interesVolver.porcentajeSi
     },
 
-    // Satisfacción
     satisfaccionEvento: {
-      conDato: satisfaccionConDato.length > 0 ? satisfaccionConDato.reduce((sum, item) => sum + item.total, 0) : 0,
-      sinDato: filas.length - (satisfaccionConDato.length > 0 ? satisfaccionConDato.reduce((sum, item) => sum + item.total, 0) : 0),
-      porcentajePositivo: satisfaccionPositiva,
+      conDato: porSatisfaccion.reduce((sum, item) => sum + item.total, 0),
+      sinDato: totalRegistros - porSatisfaccion.reduce((sum, item) => sum + item.total, 0),
       distribucion: porSatisfaccion
     },
 
-    // Distribuciones demográficas
     porSexo,
     porRangoEdad,
     porComuna,
+    porCanalAtencion,
+    registrosPorAño: registrosPorAno.conteo,
 
-    // Series temporales
-    registrosPorAño,
+    dashboardInstitucional,
+    dashboardNormalizado: {
+      kpis: kpisInstitucionales,
+      graficas: {
+        asistentesPorAno: registrosPorAno.serie,
+        asistentesPorComuna: porComuna,
+        asistentesPorSexo: porSexo,
+        satisfaccionEvento: porSatisfaccion,
+        conoceContraloria: porConoceContraloria,
+        canalAtencion: porCanalAtencion
+      }
+    },
 
-    // Metadata comparación con PBIX
     comparacionPbix: {
       pagina: "Encuentros de Ciudad",
       pageId: "fe75146cb079345ede3a",
+      valoresRenderizadosPbix: "NO_DISPONIBLES_EN_JSON_EXTRAIDO",
       metricas: [
-        {
-          nombre: "Total Encuentros",
-          rawValue: eventos.definicion_fecha_lugar,
-          estado: "PENDIENTE_CONFIRMACION_DAX"
-        },
-        {
-          nombre: "Promedio Asistentes por Encuentro",
-          rawValue: eventos.promedioAsistentes_A,
-          estado: "PENDIENTE_CONFIRMACION_DAX"
-        }
-      ]
+        { nombre: "Total Asistentes", rawValue: totalRegistros, pbixValue: null, estado: "PBIX_DAX_NO_EXTRAIBLE" },
+        { nombre: "Total Encuentros", rawValue: totalEncuentros, pbixValue: null, estado: "PBIX_DAX_NO_EXTRAIBLE" },
+        { nombre: "Promedio Asistentes por Encuentro", rawValue: promedioAsistentes, pbixValue: null, estado: "PBIX_DAX_NO_EXTRAIBLE" }
+      ],
+      candidatosDefinicionEvento: eventos.candidatos
     },
 
-    // Información de diagnóstico
     diagnostico: {
-      totalFilas: filas.length,
+      totalFilas: totalRegistros,
       filasConAñoReconocido: validacion?.resumen?.diagnosticoFechas?.filasConAñoReconocido || 0,
       filasSinAño: validacion?.resumen?.diagnosticoFechas?.diferencia || 0,
+      registrosPorAno,
       categoriasDetectadas: validacion?.categoriasDetectadas || {}
     }
   };
