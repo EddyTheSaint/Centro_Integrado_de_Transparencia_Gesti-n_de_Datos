@@ -1,5 +1,6 @@
 import { BUEN_COMIENZO_CATALOGOS } from "../catalogs/buenComienzo.catalog.js";
 import { canon } from "../validators/utils.js";
+import { parseNumeroBuenComienzoDetalle } from "../utils/buenComienzoNumeros.js";
 
 function indiceReglas(reglas) {
   return new Map((reglas || []).map(regla => [canon(regla.original), regla]));
@@ -18,6 +19,16 @@ function registrarAplicacion(registros, campo, valorOriginal, valorNormalizado, 
   registros.set(clave, actual);
 }
 
+function parseCantidad(valor) {
+  if (valor == null || String(valor).trim() === "") return null;
+  const numero = Number(String(valor).replace(/,/g, "").trim());
+  return Number.isFinite(numero) ? numero : null;
+}
+
+function normalizarTextoBasico(valor) {
+  return String(valor ?? "").trim().replace(/\s+/g, " ").toUpperCase();
+}
+
 function normalizarBeneficiarios({ filas, campos }) {
   const registros = new Map();
   const indices = {
@@ -28,28 +39,53 @@ function normalizarBeneficiarios({ filas, campos }) {
   const datosNormalizados = filas.map(fila => {
     const normalizada = { ...fila };
 
+    if (campos.comuna) {
+      const columna = campos.comuna;
+      const valor = fila[columna];
+      normalizada._COMUNA_ORIGINAL = valor;
+      if (valor != null && String(valor).trim() !== "") {
+        const limpio = String(valor).trim();
+        const regla = indices.comuna.get(canon(limpio));
+        if (regla) {
+          normalizada.COMUNA_NORMALIZADA = regla.normalizado;
+          normalizada.TIPO_TERRITORIO = regla.tipo;
+          registrarAplicacion(registros, columna, limpio, regla.normalizado, regla.regla);
+        } else {
+          normalizada.COMUNA_NORMALIZADA = limpio;
+          normalizada.TIPO_TERRITORIO = "SIN_CLASIFICAR";
+        }
+      } else {
+        normalizada.COMUNA_NORMALIZADA = null;
+        normalizada.TIPO_TERRITORIO = "SIN_TERRITORIO";
+      }
+    }
+
     if (campos.modalidad) {
       const columna = campos.modalidad;
       const valor = fila[columna];
+      normalizada._MODALIDAD_ORIGINAL = valor;
       if (valor != null && String(valor).trim() !== "") {
-        const regla = indices.modalidad.get(canon(valor));
+        const limpio = String(valor).trim();
+        const regla = indices.modalidad.get(canon(limpio));
         if (regla) {
-          normalizada[columna] = regla.normalizado;
-          registrarAplicacion(registros, columna, String(valor), regla.normalizado, regla.regla);
+          normalizada.NOMBRE_MODALIDAD_NORMALIZADA = regla.normalizado;
+          registrarAplicacion(registros, columna, limpio, regla.normalizado, regla.regla);
+        } else {
+          normalizada.NOMBRE_MODALIDAD_NORMALIZADA = normalizarTextoBasico(limpio);
         }
       }
     }
 
-    if (campos.comuna) {
-      const columna = campos.comuna;
-      const valor = fila[columna];
-      if (valor != null && String(valor).trim() !== "") {
-        const regla = indices.comuna.get(canon(valor));
-        if (regla) {
-          normalizada[columna] = regla.normalizado;
-          registrarAplicacion(registros, columna, String(valor), regla.normalizado, regla.regla);
-        }
-      }
+    for (const [campoLogico, campoNormalizado] of [
+      ["niña", "NIÑA_NORMALIZADA"],
+      ["niño", "NIÑO_NORMALIZADO"],
+      ["total", "TOTAL_NORMALIZADO"]
+    ]) {
+      const columna = campos[campoLogico];
+      if (!columna) continue;
+      const valor = parseCantidad(fila[columna]);
+      normalizada[campoNormalizado] = valor;
+      if (valor != null) normalizada[columna] = valor;
     }
 
     return normalizada;
@@ -64,27 +100,37 @@ function normalizarPresupuesto({ filas, campos }) {
   const datosNormalizados = filas.map(fila => {
     const normalizada = { ...fila };
 
+    if (campos.proyecto) {
+      const valor = fila[campos.proyecto];
+      normalizada._PROYECTO_ORIGINAL = valor;
+      if (valor != null && String(valor).trim() !== "") {
+        const normalizado = normalizarTextoBasico(valor);
+        normalizada.PROYECTO_NORMALIZADO = normalizado;
+        if (normalizado !== String(valor).trim()) {
+          registrarAplicacion(registros, campos.proyecto, String(valor).trim(), normalizado, "BC-PROYECTO-CASE-ESPACIOS");
+        }
+      }
+    }
+
     if (campos.valor) {
       const columna = campos.valor;
       const valor = fila[columna];
-      if (valor != null && !isNaN(Number(valor))) {
-        const numerico = Number(valor);
-        if (numerico < 0) {
-          registrarAplicacion(registros, columna, valor, 0, "BC-PRESUPUESTO-NEGATIVO");
-          normalizada[columna] = 0;
-        }
+      normalizada._VALOR_ORIGINAL = valor;
+      const resultado = parseNumeroBuenComienzoDetalle(valor);
+      normalizada.VALOR_NORMALIZADO = resultado.valido ? resultado.valor : null;
+      if (resultado.valido && resultado.valor !== Number(valor)) {
+        registrarAplicacion(registros, columna, valor, resultado.valor, "BC-CONVERSION-VALOR");
       }
     }
 
     if (campos.ejecutado) {
       const columna = campos.ejecutado;
       const valor = fila[columna];
-      if (valor != null && !isNaN(Number(valor))) {
-        const numerico = Number(valor);
-        if (numerico < 0) {
-          registrarAplicacion(registros, columna, valor, 0, "BC-EJECUTADO-NEGATIVO");
-          normalizada[columna] = 0;
-        }
+      normalizada._EJECUTADO_ORIGINAL = valor;
+      const resultado = parseNumeroBuenComienzoDetalle(valor);
+      normalizada.EJECUTADO_NORMALIZADO = resultado.valido ? resultado.valor : null;
+      if (resultado.valido && resultado.valor !== Number(valor)) {
+        registrarAplicacion(registros, columna, valor, resultado.valor, "BC-CONVERSION-EJECUTADO");
       }
     }
 

@@ -1,122 +1,78 @@
 export const BUEN_COMIENZO_CATALOGOS = {
   campos: {
     id: "ID",
-    comuna: "COMUNA",
-    corregimiento: "CORREGIMIENTO",
-    niñas: "NIÑAS",
-    niños: "NIÑOS",
+    comuna: "NOMBRE COMUNA",
+    idComunaSede: "ID_COMUNA_SEDE",
+    ninas: "NIÑA",
+    ninos: "NIÑO",
     total: "TOTAL",
-    modalidad: "MODALIDAD",
-    presupuestoAsignado: "PRESUPUESTO_ASIGNADO",
-    presupuestoEjecutado: "PRESUPUESTO_EJECUTADO",
+    modalidad: "NOMBRE_MODALIDAD",
+    sede: "NOMBRE_SEDE",
+    presupuestoAsignado: "VALOR",
+    presupuestoEjecutado: "EJECUTADO",
     mes: "MES",
     fechaCorte: "FECHA_CORTE"
   },
+  universoTerritorial: {
+    comunas: 16,
+    corregimientos: 5,
+    total: 21,
+    nota: "16 comunas y 5 corregimientos de Medellín. Registros sin territorio, como ICBF, no aumentan el denominador."
+  },
   normalizaciones: {
     modalidad: [
-      {
-        original: "CENTRO INFANTIL",
-        normalizado: "CENTRO INFANTIL",
-        regla: "BC-MODALIDAD-CENTRO-INFANTIL"
-      },
-      {
-        original: "JARDIN INFANTIL",
-        normalizado: "JARDÍN INFANTIL",
-        regla: "BC-MODALIDAD-JARDIN-INFANTIL"
-      },
-      {
-        original: "INSTITUCIONAL FLEXIBLE",
-        normalizado: "INSTITUCIONAL FLEXIBLE",
-        regla: "BC-MODALIDAD-INSTITUCIONAL-FLEXIBLE"
-      },
-      {
-        original: "ENTORNO FAMILIAR",
-        normalizado: "ENTORNO FAMILIAR",
-        regla: "BC-MODALIDAD-ENTORNO-FAMILIAR"
-      }
+      { original: "ENTORNO FAMILIAR", normalizado: "ENTORNO FAMILIAR", regla: "BC-MODALIDAD-ENTORNO-FAMILIAR" },
+      { original: "INSTITUCIONAL 8 HORAS", normalizado: "INSTITUCIONAL 8 HORAS", regla: "BC-MODALIDAD-INSTITUCIONAL-8-HORAS" },
+      { original: "Institucional 8 Horas", normalizado: "INSTITUCIONAL 8 HORAS", regla: "BC-MODALIDAD-INSTITUCIONAL-8-HORAS-CASE" },
+      { original: "MODALIDAD FAMILIAR", normalizado: "MODALIDAD FAMILIAR", regla: "BC-MODALIDAD-FAMILIAR" },
+      { original: "Modalidad Familiar", normalizado: "MODALIDAD FAMILIAR", regla: "BC-MODALIDAD-FAMILIAR-CASE" },
+      { original: "ICBF", normalizado: "ICBF", regla: "BC-MODALIDAD-ICBF" }
     ],
     comuna: [
-      // Comunas de Medellín
-      {
-        original: "POPULAR",
-        normalizado: "COMUNA 01 POPULAR",
-        regla: "BC-COMUNA-01-POPULAR"
-      },
-      {
-        original: "SANTA CRUZ",
-        normalizado: "COMUNA 02 SANTA CRUZ",
-        regla: "BC-COMUNA-02-SANTA-CRUZ"
-      },
-      {
-        original: "MANRIQUE",
-        normalizado: "COMUNA 03 MANRIQUE",
-        regla: "BC-COMUNA-03-MANRIQUE"
-      },
-      {
-        original: "ARANDA",
-        normalizado: "COMUNA 04 ARANDA",
-        regla: "BC-COMUNA-04-ARANDA"
-      },
-      {
-        original: "CASTILLA",
-        normalizado: "COMUNA 05 CASTILLA",
-        regla: "BC-COMUNA-05-CASTILLA"
-      },
-      {
-        original: "DOCE DE OCTUBRE",
-        normalizado: "COMUNA 06 DOCE DE OCTUBRE",
-        regla: "BC-COMUNA-06-DOCE-DE-OCTUBRE"
-      },
-      {
-        original: "ROBLEDO",
-        normalizado: "COMUNA 07 ROBLEDO",
-        regla: "BC-COMUNA-07-ROBLEDO"
-      },
-      {
-        original: "VILLA HERMOSA",
-        normalizado: "COMUNA 08 VILLA HERMOSA",
-        regla: "BC-COMUNA-08-VILLA-HERMOSA"
-      },
-      {
-        original: "BUENOS AIRES",
-        normalizado: "COMUNA 09 BUENOS AIRES",
-        regla: "BC-COMUNA-09-BUENOS-AIRES"
-      },
-      {
-        original: "LA CANDELARIA",
-        normalizado: "COMUNA 10 LA CANDELARIA",
-        regla: "BC-COMUNA-10-LA-CANDELARIA"
-      },
-      {
-        original: "LAURELES",
-        normalizado: "COMUNA 11 LAURELES",
-        regla: "BC-COMUNA-11-LAURELES"
-      },
-      {
-        original: "LA AMÉRICA",
-        normalizado: "COMUNA 12 LA AMÉRICA",
-        regla: "BC-COMUNA-12-LA-AMERICA"
-      },
-      {
-        original: "SAN ALEJO",
-        normalizado: "COMUNA 13 SAN ALEJO",
-        regla: "BC-COMUNA-13-SAN-ALEJO"
-      },
-      {
-        original: "ALTAVISTA",
-        normalizado: "COMUNA 14 ALTAVISTA",
-        regla: "BC-COMUNA-14-ALTAVISTA"
-      },
-      {
-        original: "GUAYABAL",
-        normalizado: "COMUNA 15 GUAYABAL",
-        regla: "BC-COMUNA-15-GUAYABAL"
-      },
-      {
-        original: "BELÉN",
-        normalizado: "COMUNA 16 BELÉN",
-        regla: "BC-COMUNA-16-BELEN"
-      }
+      { original: "1 POPULAR", normalizado: "COMUNA 01 POPULAR", tipo: "COMUNA", regla: "BC-TERRITORIO-01-POPULAR" },
+      { original: "POPULAR", normalizado: "COMUNA 01 POPULAR", tipo: "COMUNA", regla: "BC-TERRITORIO-01-POPULAR-NOMBRE" },
+      { original: "2 SANTA CRUZ", normalizado: "COMUNA 02 SANTA CRUZ", tipo: "COMUNA", regla: "BC-TERRITORIO-02-SANTA-CRUZ" },
+      { original: "SANTA CRUZ", normalizado: "COMUNA 02 SANTA CRUZ", tipo: "COMUNA", regla: "BC-TERRITORIO-02-SANTA-CRUZ-NOMBRE" },
+      { original: "3 MANRIQUE", normalizado: "COMUNA 03 MANRIQUE", tipo: "COMUNA", regla: "BC-TERRITORIO-03-MANRIQUE" },
+      { original: "MANRIQUE", normalizado: "COMUNA 03 MANRIQUE", tipo: "COMUNA", regla: "BC-TERRITORIO-03-MANRIQUE-NOMBRE" },
+      { original: "4 ARANJUEZ", normalizado: "COMUNA 04 ARANJUEZ", tipo: "COMUNA", regla: "BC-TERRITORIO-04-ARANJUEZ" },
+      { original: "ARANJUEZ", normalizado: "COMUNA 04 ARANJUEZ", tipo: "COMUNA", regla: "BC-TERRITORIO-04-ARANJUEZ-NOMBRE" },
+      { original: "5 CASTILLA", normalizado: "COMUNA 05 CASTILLA", tipo: "COMUNA", regla: "BC-TERRITORIO-05-CASTILLA" },
+      { original: "CASTILLA", normalizado: "COMUNA 05 CASTILLA", tipo: "COMUNA", regla: "BC-TERRITORIO-05-CASTILLA-NOMBRE" },
+      { original: "6 DOCE DE OCTUBRE", normalizado: "COMUNA 06 DOCE DE OCTUBRE", tipo: "COMUNA", regla: "BC-TERRITORIO-06-DOCE-DE-OCTUBRE" },
+      { original: "DOCE DE OCTUBRE", normalizado: "COMUNA 06 DOCE DE OCTUBRE", tipo: "COMUNA", regla: "BC-TERRITORIO-06-DOCE-DE-OCTUBRE-NOMBRE" },
+      { original: "7 ROBLEDO", normalizado: "COMUNA 07 ROBLEDO", tipo: "COMUNA", regla: "BC-TERRITORIO-07-ROBLEDO" },
+      { original: "ROBLEDO", normalizado: "COMUNA 07 ROBLEDO", tipo: "COMUNA", regla: "BC-TERRITORIO-07-ROBLEDO-NOMBRE" },
+      { original: "8 VILLA HERMOSA", normalizado: "COMUNA 08 VILLA HERMOSA", tipo: "COMUNA", regla: "BC-TERRITORIO-08-VILLA-HERMOSA" },
+      { original: "VILLA HERMOSA", normalizado: "COMUNA 08 VILLA HERMOSA", tipo: "COMUNA", regla: "BC-TERRITORIO-08-VILLA-HERMOSA-NOMBRE" },
+      { original: "9 BUENOS AIRES", normalizado: "COMUNA 09 BUENOS AIRES", tipo: "COMUNA", regla: "BC-TERRITORIO-09-BUENOS-AIRES" },
+      { original: "BUENOS AIRES", normalizado: "COMUNA 09 BUENOS AIRES", tipo: "COMUNA", regla: "BC-TERRITORIO-09-BUENOS-AIRES-NOMBRE" },
+      { original: "10 LA CANDELARIA", normalizado: "COMUNA 10 LA CANDELARIA", tipo: "COMUNA", regla: "BC-TERRITORIO-10-LA-CANDELARIA" },
+      { original: "LA CANDELARIA", normalizado: "COMUNA 10 LA CANDELARIA", tipo: "COMUNA", regla: "BC-TERRITORIO-10-LA-CANDELARIA-NOMBRE" },
+      { original: "11 LAURELES ESTADIO", normalizado: "COMUNA 11 LAURELES ESTADIO", tipo: "COMUNA", regla: "BC-TERRITORIO-11-LAURELES-ESTADIO" },
+      { original: "LAURELES ESTADIO", normalizado: "COMUNA 11 LAURELES ESTADIO", tipo: "COMUNA", regla: "BC-TERRITORIO-11-LAURELES-ESTADIO-NOMBRE" },
+      { original: "LAURELES", normalizado: "COMUNA 11 LAURELES ESTADIO", tipo: "COMUNA", regla: "BC-TERRITORIO-11-LAURELES-NOMBRE" },
+      { original: "12 LA AMERICA", normalizado: "COMUNA 12 LA AMERICA", tipo: "COMUNA", regla: "BC-TERRITORIO-12-LA-AMERICA" },
+      { original: "LA AMERICA", normalizado: "COMUNA 12 LA AMERICA", tipo: "COMUNA", regla: "BC-TERRITORIO-12-LA-AMERICA-NOMBRE" },
+      { original: "13 SAN JAVIER", normalizado: "COMUNA 13 SAN JAVIER", tipo: "COMUNA", regla: "BC-TERRITORIO-13-SAN-JAVIER" },
+      { original: "SAN JAVIER", normalizado: "COMUNA 13 SAN JAVIER", tipo: "COMUNA", regla: "BC-TERRITORIO-13-SAN-JAVIER-NOMBRE" },
+      { original: "14 EL POBLADO", normalizado: "COMUNA 14 EL POBLADO", tipo: "COMUNA", regla: "BC-TERRITORIO-14-EL-POBLADO" },
+      { original: "EL POBLADO", normalizado: "COMUNA 14 EL POBLADO", tipo: "COMUNA", regla: "BC-TERRITORIO-14-EL-POBLADO-NOMBRE" },
+      { original: "POBLADO", normalizado: "COMUNA 14 EL POBLADO", tipo: "COMUNA", regla: "BC-TERRITORIO-14-POBLADO-NOMBRE" },
+      { original: "15 GUAYABAL", normalizado: "COMUNA 15 GUAYABAL", tipo: "COMUNA", regla: "BC-TERRITORIO-15-GUAYABAL" },
+      { original: "GUAYABAL", normalizado: "COMUNA 15 GUAYABAL", tipo: "COMUNA", regla: "BC-TERRITORIO-15-GUAYABAL-NOMBRE" },
+      { original: "16 BELEN", normalizado: "COMUNA 16 BELEN", tipo: "COMUNA", regla: "BC-TERRITORIO-16-BELEN" },
+      { original: "BELEN", normalizado: "COMUNA 16 BELEN", tipo: "COMUNA", regla: "BC-TERRITORIO-16-BELEN-NOMBRE" },
+      { original: "50 PALMITAS", normalizado: "CORREGIMIENTO 50 PALMITAS", tipo: "CORREGIMIENTO", regla: "BC-TERRITORIO-50-PALMITAS" },
+      { original: "PALMITAS", normalizado: "CORREGIMIENTO 50 PALMITAS", tipo: "CORREGIMIENTO", regla: "BC-TERRITORIO-50-PALMITAS-NOMBRE" },
+      { original: "60 SAN CRISTOBAL", normalizado: "CORREGIMIENTO 60 SAN CRISTOBAL", tipo: "CORREGIMIENTO", regla: "BC-TERRITORIO-60-SAN-CRISTOBAL" },
+      { original: "SAN CRISTOBAL", normalizado: "CORREGIMIENTO 60 SAN CRISTOBAL", tipo: "CORREGIMIENTO", regla: "BC-TERRITORIO-60-SAN-CRISTOBAL-NOMBRE" },
+      { original: "70 ALTAVISTA", normalizado: "CORREGIMIENTO 70 ALTAVISTA", tipo: "CORREGIMIENTO", regla: "BC-TERRITORIO-70-ALTAVISTA" },
+      { original: "ALTAVISTA", normalizado: "CORREGIMIENTO 70 ALTAVISTA", tipo: "CORREGIMIENTO", regla: "BC-TERRITORIO-70-ALTAVISTA-NOMBRE" },
+      { original: "80 SAN ANTONIO DE PRADO", normalizado: "CORREGIMIENTO 80 SAN ANTONIO DE PRADO", tipo: "CORREGIMIENTO", regla: "BC-TERRITORIO-80-SAN-ANTONIO-DE-PRADO" },
+      { original: "SAN ANTONIO DE PRADO", normalizado: "CORREGIMIENTO 80 SAN ANTONIO DE PRADO", tipo: "CORREGIMIENTO", regla: "BC-TERRITORIO-80-SAN-ANTONIO-DE-PRADO-NOMBRE" },
+      { original: "90 SANTA ELENA", normalizado: "CORREGIMIENTO 90 SANTA ELENA", tipo: "CORREGIMIENTO", regla: "BC-TERRITORIO-90-SANTA-ELENA" },
+      { original: "SANTA ELENA", normalizado: "CORREGIMIENTO 90 SANTA ELENA", tipo: "CORREGIMIENTO", regla: "BC-TERRITORIO-90-SANTA-ELENA-NOMBRE" }
     ]
   }
 };

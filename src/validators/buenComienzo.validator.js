@@ -1,5 +1,6 @@
 import { buscarHeader, canon } from "./utils.js";
 import { detectarHojaBuenComienzo } from "../services/excel.service.js";
+import { parseNumeroBuenComienzoDetalle } from "../utils/buenComienzoNumeros.js";
 
 const CAMPOS_BENEFICIARIOS = {
   id: ["ID", "IDENTIFICADOR"],
@@ -106,13 +107,13 @@ function validarPresupuesto({ headers, filas }) {
   filas.forEach((fila, i) => {
     if (campos.valor) {
       const valor = fila[campos.valor];
-      if (valor != null && isNaN(Number(valor))) {
+      if (valor != null && !parseNumeroBuenComienzoDetalle(valor).valido) {
         valoresInvalidos++;
       }
     }
     if (campos.ejecutado) {
       const ejecutado = fila[campos.ejecutado];
-      if (ejecutado != null && isNaN(Number(ejecutado))) {
+      if (ejecutado != null && !parseNumeroBuenComienzoDetalle(ejecutado).valido) {
         ejecutadosInvalidos++;
       }
     }

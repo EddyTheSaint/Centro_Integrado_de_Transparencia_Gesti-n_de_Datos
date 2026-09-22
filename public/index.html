@@ -119,16 +119,20 @@ function renderResumen(data){
 
 function etiquetaCampoRegla(campo){
   const c=String(campo||"").toUpperCase();
+  if(c==="AÑO" || c==="ANO" || c.includes("AÑO") || c.includes("ANO")) return "AÑO";
   if(c.includes("COMUNA")) return "COMUNA";
+  if(c.includes("PROGRAMA")) return "PROGRAMA";
   if(c.includes("SATISFACCION")) return "SATISFACCIÓN";
   if(c.includes("SEXO")) return "SEXO";
   if(c.includes("EDAD")) return "RANGO DE EDAD";
   if(c.includes("ESCOLARIDAD")) return "ESCOLARIDAD";
+  if(c.includes("PRESUPUESTO")) return "PRESUPUESTO";
   if(c.includes("CELULAR") || c.includes("CORREO") || c.includes("CONTRALOR") || c.includes("INTERES")) return "SI/NO";
   return campo||"OTRO";
 }
 
 function renderReglasCompactas(reglas){
+  const maxReglasVisibles=5;
   const grupos=new Map();
   for(const regla of reglas){
     const campo=etiquetaCampoRegla(regla.campo);
@@ -146,7 +150,8 @@ function renderReglasCompactas(reglas){
         <summary style="cursor:pointer;padding:12px 14px;font-weight:800;">${g.campo}<span class="muted" style="font-weight:600;"> · ${g.reglas.length} reglas · ${g.total.toLocaleString('es-ES')} registros</span></summary>
         <div class="table-wrap" style="border:0;border-top:1px solid var(--line);border-radius:0;">
           <table><thead><tr><th>Valor original</th><th>Valor normalizado</th><th>Regla</th><th>Cantidad</th></tr></thead><tbody>
-            ${g.reglas.map(r=>`<tr><td>${r.valor_original}</td><td>${r.valor_normalizado}</td><td>${r.regla}</td><td>${r.cantidad_afectada}</td></tr>`).join("")}
+            ${g.reglas.sort((a,b)=>(b.cantidad_afectada||0)-(a.cantidad_afectada||0)).slice(0,maxReglasVisibles).map(r=>`<tr><td>${r.valor_original}</td><td>${r.valor_normalizado}</td><td>${r.regla}</td><td>${r.cantidad_afectada}</td></tr>`).join("")}
+            ${g.reglas.length>maxReglasVisibles?`<tr><td colspan="4" class="muted">+ ${g.reglas.length-maxReglasVisibles} reglas adicionales en el reporte de validaciÃ³n</td></tr>`:""}
           </tbody></table>
         </div>
       </details>`).join("")}
@@ -160,7 +165,7 @@ function renderReglas(reglas,proceso){
     cont.innerHTML='<p class="muted">No se aplicaron reglas configuradas.</p>';
     return;
   }
-  if(proceso==="ENCUENTROS_DE_CIUDAD"){
+  if(proceso==="ENCUENTROS_DE_CIUDAD" || proceso==="ENVEJECIMIENTO_Y_VEJEZ"){
     cont.innerHTML=renderReglasCompactas(reglas);
     return;
   }
@@ -172,6 +177,16 @@ function chart(title,items){
   const rows=items.slice(0,15).map(i=>{
     const width=Math.max(3,Math.round((i.total/max)*100));
     return `<div class="bar-row"><div class="bar-label" title="${i.categoria}">${i.categoria}</div><div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div><strong>${i.total}</strong></div>`;
+  }).join("");
+  return `<div><h3>${title}</h3>${rows || '<p class="muted">Sin datos.</p>'}</div>`;
+}
+
+function chartCop(title,items){
+  const max=Math.max(1,...items.map(i=>i.total));
+  const rows=items.slice(0,15).map(i=>{
+    const width=Math.max(3,Math.round((i.total/max)*100));
+    const valor=(i.total||0).toLocaleString('es-ES',{style:'currency',currency:'COP',minimumFractionDigits:0});
+    return `<div class="bar-row"><div class="bar-label" title="${i.categoria}">${i.categoria}</div><div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div><strong>${valor}</strong></div>`;
   }).join("");
   return `<div><h3>${title}</h3>${rows || '<p class="muted">Sin datos.</p>'}</div>`;
 }
@@ -324,17 +339,29 @@ function renderDashboard(dashboard,proceso){
     ].join("");
   }else if(dashboard.kpis){
     title.textContent="Dashboard Buen Comienzo";
+    const k=dashboard.kpis||{};
+    const graficas=dashboard.graficas||{};
+    const presupuestoPorAnio=graficas["presupuestoPorAño"]||graficas["presupuestoPorAÃ±o"]||[];
+    const presupuestoAsignadoPorAnio=presupuestoPorAnio.map(i=>({categoria:i.categoria,total:i.asignado||0}));
+    const presupuestoEjecutadoPorAnio=presupuestoPorAnio.map(i=>({categoria:i.categoria,total:i.ejecutado||0}));
     kpisDiv.hidden=false;
     kpisDiv.innerHTML=[
-      metric("Total Beneficiarios",dashboard.kpis.totalBeneficiarios.toLocaleString('es-ES')),
-      metric("Ni&ntilde;as",dashboard.kpis.totalNiñas.toLocaleString('es-ES')),
-      metric("Ni&ntilde;os",dashboard.kpis.totalNiños.toLocaleString('es-ES')),
-      metric("% Comunas Cubiertas",dashboard.kpis.porcentajeComunas + "%")
+      metric("Total Beneficiarios",(k.totalBeneficiarios||0).toLocaleString('es-ES')),
+      metric("Ni&ntilde;as",(k.totalNinas||0).toLocaleString('es-ES')),
+      metric("Ni&ntilde;os",(k.totalNinos||0).toLocaleString('es-ES')),
+      metric("% Territorios Cubiertos",(k.porcentajeComunasCubiertas||k.porcentajeComunas||0) + "%"),
+      metric("Presupuesto Asignado",(k.presupuestoAsignado||0).toLocaleString('es-ES',{style:'currency',currency:'COP',minimumFractionDigits:0})),
+      metric("% Ejecuci&oacute;n",(k.tasaEjecucion||0) + "%")
     ].join("");
     chartsDiv.innerHTML=[
-      chart("Beneficiarios por modalidad",dashboard.graficas?.beneficiariosPorModalidad||[]),
-      chart("Beneficiarios por comuna",dashboard.graficas?.beneficiariosPorComuna||[]),
-      chart("Beneficiarios por sexo",dashboard.graficas?.beneficiariosPorSexo||[])
+      chart("Beneficiarios por modalidad",graficas.beneficiariosPorModalidad||[]),
+      chart("Beneficiarios por comuna/corregimiento",graficas.beneficiariosPorComuna||[]),
+      chart("Beneficiarios por sexo",graficas.beneficiariosPorSexo||[]),
+      chart("Beneficiarios por a&ntilde;o",graficas["beneficiariosPorAño"]||graficas["beneficiariosPorAÃ±o"]||[]),
+      chart("Beneficiarios por sede",graficas.beneficiariosPorSede||[]),
+      chartCop("Presupuesto asignado por a&ntilde;o",presupuestoAsignadoPorAnio),
+      chartCop("Presupuesto ejecutado por a&ntilde;o",presupuestoEjecutadoPorAnio),
+      chartCop("Presupuesto por proyecto",graficas.presupuestoPorProyecto||[])
     ].join("");
   }else{
     title.textContent="Dashboard PQRSD";
