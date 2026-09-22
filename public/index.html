@@ -132,7 +132,7 @@ function etiquetaCampoRegla(campo){
 }
 
 function renderReglasCompactas(reglas){
-  const maxReglasVisibles=5;
+  const maxReglasVisibles=3;
   const grupos=new Map();
   for(const regla of reglas){
     const campo=etiquetaCampoRegla(regla.campo);
@@ -165,7 +165,7 @@ function renderReglas(reglas,proceso){
     cont.innerHTML='<p class="muted">No se aplicaron reglas configuradas.</p>';
     return;
   }
-  if(proceso==="ENCUENTROS_DE_CIUDAD" || proceso==="ENVEJECIMIENTO_Y_VEJEZ"){
+  if(proceso==="ENCUENTROS_DE_CIUDAD" || proceso==="ENVEJECIMIENTO_Y_VEJEZ" || proceso==="BUEN_COMIENZO" || proceso==="HABITANTES_CALLE"){
     cont.innerHTML=renderReglasCompactas(reglas);
     return;
   }
