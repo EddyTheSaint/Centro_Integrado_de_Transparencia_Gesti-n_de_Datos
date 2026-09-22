@@ -1,4 +1,5 @@
 import { buscarHeader, canon } from "./utils.js";
+import { parsePresupuestoHabitantesDetalle } from "../utils/habitantesCallePresupuesto.js";
 
 // Campos esperados en el Excel RAW de Habitantes de Calle
 const CAMPOS = {
@@ -18,6 +19,12 @@ function resolver(headers) {
   return Object.fromEntries(
     Object.entries(CAMPOS).map(([k, v]) => [k, buscarHeader(headers, v)])
   );
+}
+
+function parseCantidadHabitantes(valor) {
+  if (valor == null || String(valor).trim() === "") return NaN;
+  if (typeof valor === "number") return valor;
+  return Number(String(valor).trim().replace(/,/g, ""));
 }
 
 export default {
@@ -95,7 +102,7 @@ export default {
           fila: i + 2,
           mensaje: "Registro sin CANTIDAD."
         });
-      } else if (isNaN(Number(cantidad))) {
+      } else if (isNaN(parseCantidadHabitantes(cantidad))) {
         filasConCantidadInvalida++;
         advertencias.push({
           regla: "HC-CANTIDAD-INVALIDA",
@@ -103,16 +110,17 @@ export default {
           mensaje: `Cantidad no numérica: "${cantidad}"`
         });
       } else {
-        totalCantidad += Number(cantidad);
+        totalCantidad += parseCantidadHabitantes(cantidad);
       }
 
       // Validar PRESUPUESTO
       const presupuesto = fila[campos.presupuesto];
       if (presupuesto != null && String(presupuesto).trim() !== "") {
-        if (isNaN(Number(presupuesto))) {
+        const presupuestoParseado = parsePresupuestoHabitantesDetalle(presupuesto);
+        if (!presupuestoParseado.valido) {
           filasConPresupuestoInvalido++;
         } else {
-          totalPresupuesto += Number(presupuesto);
+          totalPresupuesto += presupuestoParseado.valor;
         }
       }
 

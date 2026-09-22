@@ -1,5 +1,10 @@
 import { HABITANTES_CALLE_CATALOGOS } from "../catalogs/habitantesCalle.catalog.js";
 import { canon } from "../validators/utils.js";
+import {
+  parsePresupuestoHabitantesDetalle,
+  PRESUPUESTO_NORMALIZADO_CAMPO,
+  PRESUPUESTO_ORIGINAL_CAMPO
+} from "../utils/habitantesCallePresupuesto.js";
 
 function indiceReglas(reglas) {
   return new Map((reglas || []).map(regla => [canon(regla.original), regla]));
@@ -45,6 +50,9 @@ export function normalizarHabitantesCalle({ filas, campos }) {
     }
     if (campos.nombreProyecto) {
       normalizada['_PROYECTO_ORIGINAL'] = fila[campos.nombreProyecto];
+    }
+    if (campos.presupuesto) {
+      normalizada[PRESUPUESTO_ORIGINAL_CAMPO] = fila[campos.presupuesto];
     }
 
     // Normalizar SEXO
@@ -99,12 +107,16 @@ export function normalizarHabitantesCalle({ filas, campos }) {
       const columna = campos.presupuesto;
       const valor = normalizada[columna];
       if (valor != null) {
-        const numerico = Number(String(valor).replace(/[^\d.,\-]/g, "").replace(",", "."));
-        if (!isNaN(numerico) && numerico !== Number(valor)) {
+        const resultado = parsePresupuestoHabitantesDetalle(valor);
+        if (resultado.valido) {
+          const numerico = resultado.valor;
+          normalizada[PRESUPUESTO_NORMALIZADO_CAMPO] = numerico;
           normalizada[columna] = numerico;
-          registrarAplicacion(registros, columna, valor, numerico, "HC-CONVERSION-PRESUPUESTO");
-        } else if (!isNaN(Number(valor))) {
-          normalizada[columna] = Number(valor);
+          if (numerico !== Number(valor)) {
+            registrarAplicacion(registros, columna, valor, numerico, "HC-CONVERSION-PRESUPUESTO");
+          }
+        } else {
+          normalizada[PRESUPUESTO_NORMALIZADO_CAMPO] = null;
         }
       }
     }

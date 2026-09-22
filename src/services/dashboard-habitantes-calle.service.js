@@ -1,5 +1,9 @@
 // Dashboard de Habitantes de Calle basado en RAW real
 // BD_HABITANTE_CALLE_MAYO.xlsx
+import {
+  parsePresupuestoHabitantesDetalle,
+  PRESUPUESTO_NORMALIZADO_CAMPO
+} from "../utils/habitantesCallePresupuesto.js";
 
 const TOTAL_RAW_CONTROL = 240960;
 const TOTAL_TABLERO_INSTITUCIONAL = 242986;
@@ -56,6 +60,47 @@ function agruparPorDosCategoriasYSumar(filas, campo1, campo2, campoValor) {
     .sort((a, b) => b.total - a.total);
 }
 
+function crearDiagnosticoPresupuestoPorAnio(filas, campoAnio, campoPresupuestoOriginal, campoPresupuestoSumar) {
+  const diagnostico = new Map();
+  for (let anio = 2020; anio <= 2026; anio++) {
+    diagnostico.set(String(anio), {
+      anio,
+      filas: 0,
+      filasConPresupuesto: 0,
+      filasSinPresupuesto: 0,
+      filasPresupuestoInvalido: 0,
+      presupuestoTotal: 0
+    });
+  }
+
+  if (!campoAnio) return [...diagnostico.values()];
+
+  for (const fila of filas) {
+    const anioClave = String(fila[campoAnio] ?? "").trim();
+    if (!diagnostico.has(anioClave)) continue;
+
+    const item = diagnostico.get(anioClave);
+    item.filas++;
+
+    const original = campoPresupuestoOriginal ? fila[campoPresupuestoOriginal] : null;
+    if (original == null || String(original).trim() === "") {
+      item.filasSinPresupuesto++;
+    } else {
+      const parseado = parsePresupuestoHabitantesDetalle(original);
+      if (parseado.valido) item.filasConPresupuesto++;
+      else item.filasPresupuestoInvalido++;
+    }
+
+    const valor = Number(fila[campoPresupuestoSumar]);
+    if (Number.isFinite(valor)) item.presupuestoTotal += valor;
+  }
+
+  return [...diagnostico.values()].map(item => ({
+    ...item,
+    presupuestoTotal: parseFloat(item.presupuestoTotal.toFixed(2))
+  }));
+}
+
 export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
   if (!filas || filas.length === 0) {
     return {
@@ -104,8 +149,14 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
     };
   }
 
+  const campoPresupuestoDashboard = filas.some(fila =>
+    Object.prototype.hasOwnProperty.call(fila, PRESUPUESTO_NORMALIZADO_CAMPO)
+  )
+    ? PRESUPUESTO_NORMALIZADO_CAMPO
+    : campos.presupuesto;
+
   const totalPersonasAtendidas = sumarPorCampo(filas, campos.cantidad);
-  const presupuestoTotal = sumarPorCampo(filas, campos.presupuesto);
+  const presupuestoTotal = sumarPorCampo(filas, campoPresupuestoDashboard);
   const advertencias = [];
 
   const rangosTotales = {
@@ -198,8 +249,14 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
   const presupuestoPorProyecto = sumarPorCategoria(
     filas,
     campos.nombreProyecto,
-    campos.presupuesto,
+    campoPresupuestoDashboard,
     20
+  );
+  const presupuestoPorAnioDiagnostico = crearDiagnosticoPresupuestoPorAnio(
+    filas,
+    campos["a\u00f1o"],
+    campos.presupuesto,
+    campoPresupuestoDashboard
   );
 
   const personasPorComponenteYSede = agruparPorDosCategoriasYSumar(
@@ -262,7 +319,7 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
         const bNum = Number(b.categoria);
         return aNum - bNum;
       }),
-      presupuestoPorProyecto: sumarPorCategoria(filas, "_PROYECTO_ORIGINAL", campos.presupuesto, 20),
+      presupuestoPorProyecto: sumarPorCategoria(filas, "_PROYECTO_ORIGINAL", campoPresupuestoDashboard, 20),
       personasPorComponenteYSede: agruparPorDosCategoriasYSumar(filas, "_COMPONENTE_ORIGINAL", "_SEDE_ORIGINAL", campos.cantidad).slice(0, 30),
       personasPorEdadYSexo: agruparPorDosCategoriasYSumar(filas, "_RANGOS_EDADES_ORIGINAL", "_SEXO_ORIGINAL", campos.cantidad)
     }
@@ -275,7 +332,9 @@ export function crearDashboardHabitantesCalle({ filas, campos, validacion }) {
     advertencias,
     validacionIntegridadRaw,
     comparacionInstitucional,
+    presupuestoPorAnioDiagnostico,
     diagnostico: {
+      presupuestoPorAnioDiagnostico,
       diferencia: comparacionInstitucional.diferencia,
       diferenciaPorcentaje: parseFloat((Math.abs(comparacionInstitucional.diferencia) / TOTAL_TABLERO_INSTITUCIONAL * 100).toFixed(2)),
       mensaje: comparacionInstitucional.diferencia !== 0
