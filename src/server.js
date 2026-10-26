@@ -2,6 +2,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import cargasRouter from "./routes/cargas.routes.js";
+import cargasLocalesRouter from "./routes/cargas-locales.routes.js";
 
 // Handlers para errores no capturados
 process.on('unhandledRejection', (reason, promise) => {
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "public")));
 app.use("/archivos", express.static(path.join(__dirname, "..", "storage", "cargas")));
 app.use("/api/cargas", cargasRouter);
+app.use("/api/cargas-locales", cargasLocalesRouter);
 app.get("/api/health", (_req,res)=>res.json({ok:true,servicio:"CIT Cargador",version:"0.3.0"}));
 
 // Error handler global

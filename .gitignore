@@ -5,6 +5,7 @@ storage/uploads/
 .cache/
 .env
 .env.*
+config/forms-sync.json
 npm-debug.log*
 *.log
 *.xls
@@ -21,3 +22,6 @@ npm-debug.log*
 *secretos*
 tmp/
 temp/
+data/processed-files.json
+data/registro-cargas.csv
+data/registro-cargas.json

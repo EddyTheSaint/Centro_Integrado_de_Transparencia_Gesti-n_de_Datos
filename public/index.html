@@ -6,7 +6,7 @@
   <title>CIT - Carga de Datos</title>
   <style>
     :root{color-scheme:light;--ink:#17202a;--muted:#5d6875;--line:#d9dee6;--panel:#fff;--bg:#f3f5f8;--brand:#155e75;--ok:#15803d;--warn:#b45309;--bad:#b91c1c}
-    *{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);margin:0;color:var(--ink)}main{width:min(1160px,calc(100% - 32px));margin:28px auto 48px}h1{margin:0 0 4px;font-size:30px}h2{font-size:20px;margin:0 0 14px}h3{font-size:16px;margin:0 0 10px}.muted{color:var(--muted)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px;margin-top:18px}.grid{display:grid;gap:16px}.form-grid{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}label{display:block;font-weight:700;margin-bottom:7px}select,input,button{width:100%;min-height:44px;border-radius:7px;border:1px solid #b8c0cc;padding:10px 12px;font-size:15px;background:#fff}button{border:0;background:var(--brand);color:#fff;font-weight:800;cursor:pointer}.status{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.badge{display:inline-flex;align-items:center;min-height:30px;border-radius:999px;padding:5px 11px;font-weight:800;background:#e2e8f0}.badge.ok{background:#dcfce7;color:var(--ok)}.badge.warn{background:#ffedd5;color:var(--warn)}.badge.bad{background:#fee2e2;color:var(--bad)}.metrics{grid-template-columns:repeat(4,minmax(0,1fr))}.metric{border:1px solid var(--line);border-radius:8px;padding:16px;background:#fbfcfe}.metric strong{display:block;font-size:28px}.charts{grid-template-columns:repeat(2,minmax(0,1fr))}.bar-row{display:grid;grid-template-columns:minmax(130px,1.2fr) minmax(120px,2fr) 48px;gap:10px;align-items:center;margin:8px 0}.bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar-track{height:12px;background:#e7ebf0;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:#0891b2}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:10px;vertical-align:top}th{background:#eef2f6}tr:last-child td{border-bottom:0}.files{display:grid;gap:8px}.files a,.files span{display:block;color:#075985;word-break:break-all}pre{white-space:pre-wrap;background:#111827;color:#e5e7eb;padding:16px;border-radius:8px;overflow:auto;max-height:360px}@media(max-width:820px){.form-grid,.metrics,.charts{grid-template-columns:1fr}.bar-row{grid-template-columns:1fr}.bar-label{white-space:normal}}
+    *{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);margin:0;color:var(--ink)}main{width:min(1160px,calc(100% - 32px));margin:28px auto 48px}h1{margin:0 0 4px;font-size:30px}h2{font-size:20px;margin:0 0 14px}h3{font-size:16px;margin:0 0 10px}.muted{color:var(--muted)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px;margin-top:18px}.grid{display:grid;gap:16px}.form-grid{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}label{display:block;font-weight:700;margin-bottom:7px}select,input,button{width:100%;min-height:44px;border-radius:7px;border:1px solid #b8c0cc;padding:10px 12px;font-size:15px;background:#fff}button{border:0;background:var(--brand);color:#fff;font-weight:800;cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}.secondary{background:#fff;color:var(--brand);border:1px solid var(--brand)}.status{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.badge{display:inline-flex;align-items:center;min-height:30px;border-radius:999px;padding:5px 11px;font-weight:800;background:#e2e8f0}.badge.ok{background:#dcfce7;color:var(--ok)}.badge.warn{background:#ffedd5;color:var(--warn)}.badge.bad{background:#fee2e2;color:var(--bad)}.metrics{grid-template-columns:repeat(4,minmax(0,1fr))}.registry-metrics{grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:16px}.metric{border:1px solid var(--line);border-radius:8px;padding:16px;background:#fbfcfe}.metric strong{display:block;font-size:28px}.charts{grid-template-columns:repeat(2,minmax(0,1fr))}.bar-row{display:grid;grid-template-columns:minmax(130px,1.2fr) minmax(120px,2fr) 48px;gap:10px;align-items:center;margin:8px 0}.bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar-track{height:12px;background:#e7ebf0;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:#0891b2}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:10px;vertical-align:top}th{background:#eef2f6}tr:last-child td{border-bottom:0}.files{display:grid;gap:8px}.files a,.files span{display:block;color:#075985;word-break:break-all}.raw-files{display:grid;gap:10px;margin-top:14px}.raw-file{display:grid;grid-template-columns:1fr auto;gap:12px;text-align:left;background:#fff;color:var(--ink);border:1px solid var(--line);padding:14px}.raw-file:hover,.raw-file.selected{border-color:var(--brand);box-shadow:0 0 0 2px rgba(21,94,117,.12)}.raw-file strong{display:block;word-break:break-word}.raw-file-meta{font-size:13px;color:var(--muted);margin-top:5px}.file-summary{border:1px solid var(--line);border-radius:8px;padding:16px;background:#fbfcfe;margin-top:16px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.actions button,.actions a{width:auto;min-height:40px;padding:9px 14px;border-radius:7px}.actions a{display:inline-flex;align-items:center;text-decoration:none;border:1px solid var(--brand);color:var(--brand);font-weight:800}.manual summary{cursor:pointer;font-weight:800;color:var(--brand)}.manual form{margin-top:18px}pre{white-space:pre-wrap;background:#111827;color:#e5e7eb;padding:16px;border-radius:8px;overflow:auto;max-height:360px}@media(max-width:820px){.form-grid,.metrics,.registry-metrics,.charts{grid-template-columns:1fr}.bar-row,.raw-file{grid-template-columns:1fr}.bar-label{white-space:normal}}
   </style>
 </head>
 <body>
@@ -16,8 +16,44 @@
     <div class="muted">Carga, validaci&oacute;n, normalizaci&oacute;n y tablero local v0.3.</div>
   </header>
 
+  <section class="panel" aria-labelledby="registroCargasTitulo">
+    <h2 id="registroCargasTitulo">Resumen de cargas</h2>
+    <div id="registroCargasEstado" class="muted">Consultando registro consolidado...</div>
+    <div id="registroCargasResumen" class="grid registry-metrics" hidden></div>
+    <h3 style="margin-top:18px;">&Uacute;ltimas cargas</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Proceso</th><th>Archivo</th><th>Fecha procesamiento</th><th>Estado</th><th>Filas</th></tr></thead>
+        <tbody id="ultimasCargas"><tr><td colspan="5" class="muted">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
   <section class="panel">
-    <form id="form" class="grid form-grid">
+    <h2>Procesar archivos sincronizados</h2>
+    <p class="muted">Selecciona un proceso para consultar los archivos disponibles en su carpeta 01_RAW.</p>
+    <div>
+      <label for="procesoLocal">Proceso / Observatorio</label>
+      <select id="procesoLocal">
+        <option value="">Seleccione...</option>
+        <option value="PQRSD">PQRSD</option>
+        <option value="ENCUENTROS_DE_CIUDAD">Encuentros de Ciudad</option>
+        <option value="BUEN_COMIENZO">Buen Comienzo</option>
+        <option value="HABITANTE_DE_CALLE">Habitante de Calle</option>
+        <option value="ENVEJECIMIENTO_Y_VEJEZ">Envejecimiento y Vejez</option>
+        <option value="CONTRATACION">Contrataci&oacute;n</option>
+      </select>
+    </div>
+    <div id="archivosRawEstado" class="muted" style="margin-top:14px;">Selecciona un proceso.</div>
+    <div id="archivosRaw" class="raw-files"></div>
+    <div id="archivoLocalResumen" class="file-summary" hidden></div>
+  </section>
+
+  <section class="panel manual">
+    <details>
+      <summary>Subir archivo manualmente</summary>
+      <p class="muted">Alternativa para archivos que todav&iacute;a no est&aacute;n sincronizados en 01_RAW.</p>
+      <form id="form" class="grid form-grid">
       <div>
         <label>Seleccionar proceso</label>
         <select name="proceso" required>
@@ -41,12 +77,13 @@
       <div class="full">
         <button type="submit">Cargar y validar</button>
       </div>
-    </form>
+      </form>
+    </details>
   </section>
 
   <section class="panel">
     <div class="status">
-      <h2 id="estado">Esperando carga</h2>
+      <h2 id="estado">Esperando selecci&oacute;n</h2>
       <span id="estadoBadge" class="badge">PENDIENTE</span>
     </div>
     <div id="hojasDetectadas" hidden style="margin-top:12px;padding:12px;background:#f0f9ff;border-radius:6px;border-left:4px solid #0284c7;">
@@ -88,6 +125,202 @@ const dashboardPanel=document.getElementById("dashboardPanel");
 const archivosPanel=document.getElementById("archivosPanel");
 const jsonPanel=document.getElementById("jsonPanel");
 const salida=document.getElementById("salida");
+const procesoLocal=document.getElementById("procesoLocal");
+const archivosRaw=document.getElementById("archivosRaw");
+const archivosRawEstado=document.getElementById("archivosRawEstado");
+const archivoLocalResumen=document.getElementById("archivoLocalResumen");
+let archivosLocales=[];
+let archivoLocalSeleccionado=null;
+
+async function cargarRegistroCargas(){
+  const estadoRegistro=document.getElementById("registroCargasEstado");
+  const resumenRegistro=document.getElementById("registroCargasResumen");
+  const ultimas=document.getElementById("ultimasCargas");
+  try{
+    const response=await fetch("/api/cargas-locales/registro");
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.mensaje||"No fue posible consultar el registro.");
+    const r=data.resumen||{};
+    resumenRegistro.innerHTML=[
+      metric("Total cargas",r.totalCargas??0),
+      metric("Validadas",r.validadas??0,"ok"),
+      metric("Observadas",r.observadas??0,"warn"),
+      metric("Pendientes",r.pendientes??0,"warn"),
+      metric("Errores",r.errores??0,"bad")
+    ].join("");
+    resumenRegistro.hidden=false;
+    estadoRegistro.textContent="";
+    const cargas=(data.cargas||[]).slice(0,10);
+    ultimas.innerHTML=cargas.length ? cargas.map(carga=>`<tr>
+      <td>${escapeHtml(carga.proceso||"-")}</td>
+      <td>${escapeHtml(carga.archivoOriginal||"-")}</td>
+      <td>${escapeHtml(formatoFecha(carga.fechaProcesamiento))}</td>
+      <td><span class="badge ${claseEstado(carga.estado)}">${escapeHtml(carga.estado)}</span></td>
+      <td>${escapeHtml(carga.totalFilas??"-")}</td>
+    </tr>`).join("") : '<tr><td colspan="5" class="muted">A&uacute;n no hay cargas registradas.</td></tr>';
+  }catch(error){
+    estadoRegistro.textContent=`Error: ${error.message}`;
+    ultimas.innerHTML='<tr><td colspan="5" class="muted">No fue posible cargar el resumen.</td></tr>';
+  }
+}
+
+function escapeHtml(valor){
+  return String(valor??"").replace(/[&<>'"]/g,caracter=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[caracter]);
+}
+
+function claseEstado(valor){
+  if(valor==="VALIDADO") return "ok";
+  if(valor==="OBSERVADO" || valor==="PENDIENTE_VALIDACION") return "warn";
+  if(valor==="ERROR_PROCESAMIENTO") return "bad";
+  return "";
+}
+
+function formatoBytes(bytes){
+  if(bytes==null) return "-";
+  if(bytes<1024) return `${bytes} B`;
+  if(bytes<1024*1024) return `${(bytes/1024).toFixed(1)} KB`;
+  return `${(bytes/(1024*1024)).toFixed(1)} MB`;
+}
+
+function formatoFecha(valor){
+  if(!valor) return "-";
+  const fecha=new Date(valor);
+  return Number.isNaN(fecha.getTime()) ? "-" : new Intl.DateTimeFormat("es-CO",{dateStyle:"medium",timeStyle:"short"}).format(fecha);
+}
+
+function enlacesResultado(archivo){
+  const etiquetas={validacion:"Ver validaci&oacute;n",normalizado:"Ver normalizado",historico:"Ver hist&oacute;rico"};
+  return Object.entries(archivo?.urls||{}).map(([tipo,url])=>
+    `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${etiquetas[tipo]||escapeHtml(tipo)}</a>`
+  ).join("");
+}
+
+function mostrarArchivoLocal(archivo){
+  archivoLocalSeleccionado=archivo;
+  [...archivosRaw.children].forEach((elemento,indice)=>elemento.classList.toggle("selected",archivosLocales[indice]===archivo));
+  archivoLocalResumen.hidden=false;
+  archivoLocalResumen.innerHTML=`
+    <div class="status"><h3 style="margin:0;">${escapeHtml(archivo.nombre)}</h3><span class="badge ${claseEstado(archivo.estado)}">${escapeHtml(archivo.estado)}</span></div>
+    <div class="grid metrics" style="margin-top:14px;">
+      ${metric("Tama&ntilde;o",formatoBytes(archivo.size))}
+      ${metric("Modificado",formatoFecha(archivo.fechaModificacion))}
+      ${metric("Procesado",archivo.procesado?"S&iacute;":"No")}
+      ${metric("Total filas",archivo.totalFilas??"-")}
+    </div>
+    ${archivo.idCarga?`<p class="muted" style="margin-bottom:0;">ID de carga: ${escapeHtml(archivo.idCarga)}<br>Procesado: ${escapeHtml(formatoFecha(archivo.fechaProcesamiento))}</p>`:""}
+    <div class="actions">
+      ${enlacesResultado(archivo)}
+      <button id="procesarArchivoLocalBtn" type="button">${archivo.procesado?"Reprocesar":"Procesar archivo"}</button>
+    </div>`;
+  document.getElementById("procesarArchivoLocalBtn").addEventListener("click",procesarArchivoSeleccionado);
+}
+
+function renderArchivosLocales(){
+  if(!archivosLocales.length){
+    archivosRaw.innerHTML="";
+    archivosRawEstado.textContent="No hay archivos .xls o .xlsx en 01_RAW.";
+    archivoLocalResumen.hidden=true;
+    archivoLocalSeleccionado=null;
+    return;
+  }
+  archivosRawEstado.textContent=`${archivosLocales.length} archivo(s) disponible(s) en 01_RAW.`;
+  archivosRaw.innerHTML=archivosLocales.map((archivo,indice)=>`
+    <button type="button" class="raw-file" data-indice="${indice}">
+      <span><strong>${escapeHtml(archivo.nombre)}</strong><span class="raw-file-meta">${formatoBytes(archivo.size)} &middot; Modificado ${escapeHtml(formatoFecha(archivo.fechaModificacion))}</span></span>
+      <span class="badge ${claseEstado(archivo.estado)}">${escapeHtml(archivo.estado)}</span>
+    </button>`).join("");
+  archivosRaw.querySelectorAll(".raw-file").forEach(boton=>boton.addEventListener("click",()=>mostrarArchivoLocal(archivosLocales[Number(boton.dataset.indice)])));
+}
+
+async function cargarArchivosLocales(nombreASeleccionar=null){
+  archivosLocales=[];
+  archivoLocalSeleccionado=null;
+  archivosRaw.innerHTML="";
+  archivoLocalResumen.hidden=true;
+  if(!procesoLocal.value){
+    archivosRawEstado.textContent="Selecciona un proceso.";
+    return;
+  }
+  archivosRawEstado.textContent="Consultando archivos...";
+  try{
+    const response=await fetch(`/api/cargas-locales/${encodeURIComponent(procesoLocal.value)}/archivos`);
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.mensaje||"No fue posible consultar 01_RAW.");
+    archivosLocales=data.archivos||[];
+    renderArchivosLocales();
+    const seleccionado=archivosLocales.find(archivo=>archivo.nombre===nombreASeleccionar);
+    if(seleccionado) mostrarArchivoLocal(seleccionado);
+  }catch(error){
+    archivosRawEstado.textContent=`Error: ${error.message}`;
+  }
+}
+
+function renderArchivosResultadoLocal(archivo){
+  archivosPanel.hidden=false;
+  const cont=document.getElementById("archivos");
+  const etiquetas={validacion:"Validaci&oacute;n",normalizado:"Normalizado",historico:"Hist&oacute;rico"};
+  const items=Object.entries(archivo?.urls||{});
+  cont.innerHTML=items.length ? items.map(([tipo,url])=>`<div><strong>${etiquetas[tipo]||escapeHtml(tipo)}</strong><a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(url)}</a></div>`).join("") : '<p class="muted">No hay archivos de resultado disponibles.</p>';
+}
+
+function mostrarResultadoLocal(data){
+  const archivo=data.archivo;
+  const resultado=data.resultado;
+  estado.textContent=`${archivo.estado} - ${archivo.nombre}`;
+  badge.textContent=archivo.estado;
+  badge.className=`badge ${claseEstado(archivo.estado)}`;
+  resumen.innerHTML=[
+    metric("Total registros",archivo.totalFilas??0),
+    metric("Errores",archivo.totalErrores??0,"bad"),
+    metric("Advertencias",archivo.totalAdvertencias??0,"warn"),
+    metric("Procesado",formatoFecha(archivo.fechaProcesamiento))
+  ].join("");
+  if(resultado?.detalle){
+    renderReglas(resultado.detalle.reglas_aplicadas||[],archivo.procesoInterno);
+    renderDashboard(resultado.detalle.dashboard,archivo.procesoInterno);
+  }
+  renderArchivosResultadoLocal(archivo);
+  salida.textContent=JSON.stringify(data,null,2);
+  jsonPanel.hidden=false;
+}
+
+async function procesarArchivoSeleccionado(){
+  const archivo=archivoLocalSeleccionado;
+  if(!archivo) return;
+  const force=archivo.procesado;
+  if(force && !window.confirm(`El archivo ya fue procesado con estado ${archivo.estado}. ¿Deseas reprocesarlo?`)) return;
+  const boton=document.getElementById("procesarArchivoLocalBtn");
+  boton.disabled=true;
+  boton.textContent="Procesando...";
+  limpiar();
+  estado.textContent="Procesando archivo sincronizado...";
+  badge.textContent="PROCESANDO";
+  badge.className="badge";
+  try{
+    const response=await fetch(`/api/cargas-locales/${encodeURIComponent(procesoLocal.value)}/procesar`,{
+      method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({archivo:archivo.nombre,force})
+    });
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.mensaje||"No fue posible procesar el archivo.");
+    await cargarArchivosLocales(archivo.nombre);
+    await cargarRegistroCargas();
+    if(archivoLocalSeleccionado) data.archivo=archivoLocalSeleccionado;
+    mostrarResultadoLocal(data);
+  }catch(error){
+    estado.textContent="ERROR";
+    badge.textContent="ERROR";
+    badge.className="badge bad";
+    salida.textContent=error.message;
+    jsonPanel.hidden=false;
+    boton.disabled=false;
+    boton.textContent=force?"Reprocesar":"Procesar archivo";
+  }
+}
+
+procesoLocal.addEventListener("change",()=>cargarArchivosLocales());
+cargarRegistroCargas();
 
 function limpiar(){
   resumen.innerHTML="";
@@ -435,6 +668,7 @@ form.addEventListener("submit",async(ev)=>{
     renderReglas(data.normalizacion?.reglasAplicadas||[],data.proceso);
     renderDashboard(data.dashboard,data.proceso);
     renderArchivos(data.rutas||{});
+    await cargarRegistroCargas();
     salida.textContent=JSON.stringify(data,null,2);
     jsonPanel.hidden=data.proceso==="ENCUENTROS_DE_CIUDAD";
   }catch(error){

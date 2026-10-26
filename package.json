@@ -2,6 +2,15 @@
   "name": "cit-cargador-mvp",
   "version": "0.1.0",
   "type": "module",
-  "scripts": {"dev":"node --watch src/server.js","start":"node src/server.js"},
+  "scripts": {
+    "dev":"node --watch src/server.js",
+    "start":"node src/server.js",
+    "sync:forms":"node src/scripts/sincronizar-forms.js",
+    "procesar-cargas":"node src/scripts/procesar-cargas.js",
+    "reconstruir-registro-cargas":"node src/scripts/reconstruir-registro-cargas.js",
+    "reconstruir-bi":"node src/scripts/reconstruir-bi.js",
+    "reconstruir-bi-historico":"node src/scripts/reconstruir-bi-historico.js",
+    "test":"node --test"
+  },
   "dependencies": {"express":"^5.1.0","multer":"^2.0.2","xlsx":"^0.18.5"}
 }
